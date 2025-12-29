@@ -13,9 +13,9 @@ from scipy.optimize import minimize
 from matplotlib.animation import FuncAnimation
 import control 
 
-import opt_project_group23_dyn as dyn
-import opt_project_group23_equilibrium as eq
-import opt_project_group23_referencetrajectory as ref_traj
+import dynamics as dyn
+import equilibrium as eq
+import reference_curve as ref_traj
 
 # Defining final time in seconds
 tf = ref_traj.tf

@@ -7,7 +7,7 @@ import sympy as sy
 import math
 import matplotlib.pyplot as plt
 
-import opt_project_group23_dyn as dyn
+import dynamics as dyn
 
 
 

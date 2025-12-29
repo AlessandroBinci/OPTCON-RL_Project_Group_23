@@ -6,9 +6,9 @@ import numpy as np
 import sympy as sy
 import math
 
-import opt_project_group23_dyn as dyn
+import dynamics as dyn
 
-import opt_project_group23_equilibrium as eq
+import equilibrium as eq
 
 # Defining final time in seconds
 tf = 10
