@@ -16,6 +16,7 @@ import control
 import dynamics as dyn
 import equilibrium as eq
 import reference_curve as ref_traj
+import cost as cst
 
 # Defining final time in seconds
 tf = ref_traj.tf
@@ -41,15 +42,39 @@ th1_final = np.deg2rad(90)
 # Computing the reference trajectory
 xx_ref, uu_ref = ref_traj.gen(tf, dt, ns, ni, th1_init, tau1_des, th1_final)
 
+# Defining the initial guess
+
+xx = xx_ref[:,0].copy() #useful to ceate a copy of the target 
+uu = uu_ref.copy()
+
 # Defining the number of max iterations
 max_iters = 50
 
+# Defining the matrices
+QQ = cst.QQ
+RR = cst.RR
+SS = np.zeros((ni, ns))
 
+#Newton's method
+for kk in range(max_iters):
+    AA_kk = np.zeros((ns, ns, TT))          #initialization of matrices
+    BB_kk = np.zeros((ns, ni, TT))
+    qq_kk = np.zeros((ns, TT))
+    rr_kk = np.zeros((ni, TT))
+    cost_current = 0
 
+    for tt in range(TT):
+        AA_kk[:,:, tt] = dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [1]
+        BB_kk[:,:, tt] = dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [2]
+        cost_actual = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [0]
+        qq_kk[:,TT] = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [1]
+        rr_kk[:,TT] = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [2]
+        cost_current += cost_actual
 
-
-
-
+    termcost_actual = cst.termcost(xx[:,-1], xx_ref[:,-1]) [0]   
+    qqT_kk = cst.termcost(xx[:,-1], xx_ref[:,-1]) [1]
+    cost_current += termcost_actual
+    
 
 
 
