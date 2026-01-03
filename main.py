@@ -23,6 +23,9 @@ tf = ref_traj.tf
 # Defining the discretization step value
 dt = dyn.dt
 
+# Defining the time-horizon value
+TT = int(tf/dt)
+
 # Defining number of states and inputs
 ns = dyn.ns
 ni = dyn.ni
@@ -37,6 +40,20 @@ th1_final = np.deg2rad(90)
 
 # Computing the reference trajectory
 xx_ref, uu_ref = ref_traj.gen(tf, dt, ns, ni, th1_init, tau1_des, th1_final)
+
+# Defining the number of max iterations
+max_iters = 50
+
+
+
+
+
+
+
+
+
+
+
 
 
 

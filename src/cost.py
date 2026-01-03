@@ -64,8 +64,8 @@ def termcost(xxT,xxT_ref, QQT):
 
     '''
 
-    llT = 0.5*((xxT - xxT_ref).T @ QQT @ (xxT - xxT_ref))
-    lTx = QQT @(xxT - xxT_ref)
+    llT = 0.5*((xxT - xxT_ref).T @ QQT @ (xxT - xxT_ref))  # cost at (xxT)
+    lTx = QQT @(xxT - xxT_ref)                             # gradient of l_T wrt x, at (xxT)
 
     return llT.squeeze(), lTx
 
