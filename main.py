@@ -76,6 +76,11 @@ for kk in range(max_iters):
     qqT_kk = cst.termcost(xx[:,-1], xx_ref[:,-1]) [1]
     cost_current += termcost_actual
     KK, sigma = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQ, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [0:2]
+    #Armijo
+    gamma = 1
+    beta = 0.7
+    c = 0.5
+    max_armijo_iters = 10
 
 
 
