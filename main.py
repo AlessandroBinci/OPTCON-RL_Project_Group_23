@@ -17,6 +17,7 @@ import dynamics as dyn
 import equilibrium as eq
 import reference_curve as ref_traj
 import cost as cst
+from ltv_solver_LQR import ltv_LQR
 
 # Defining final time in seconds
 tf = ref_traj.tf
@@ -74,7 +75,7 @@ for kk in range(max_iters):
     termcost_actual = cst.termcost(xx[:,-1], xx_ref[:,-1]) [0]   
     qqT_kk = cst.termcost(xx[:,-1], xx_ref[:,-1]) [1]
     cost_current += termcost_actual
-    
+    KK, sigma = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQ, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [0:2]
 
 
 

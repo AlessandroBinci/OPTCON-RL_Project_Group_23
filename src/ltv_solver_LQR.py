@@ -3,7 +3,6 @@
 # Problem 2 with set of parameters 1
 
 import numpy as np
-import sympy as sy
 import cvxpy as cp
 
 def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = None, qqfin = None):
@@ -72,15 +71,15 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
 
 
   if lA < TT:
-    AAin = AAin.repeat(TT, axis=2)
-  if lB < TT:
-    BBin = BBin.repeat(TT, axis=2)
+    AAin = AAin.repeat(TT, axis=2) 
+  if lB < TT:                       
+    BBin = BBin.repeat(TT, axis=2) 
   if lQ < TT:
-    QQin = QQin.repeat(TT, axis=2)
+    QQin = QQin.repeat(TT, axis=2)  #ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
   if lR < TT:
-    RRin = RRin.repeat(TT, axis=2)
+    RRin = RRin.repeat(TT, axis=2)  #ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
   if lS < TT:
-    SSin = SSin.repeat(TT, axis=2)
+    SSin = SSin.repeat(TT, axis=2)  #ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
 
   # Inizialization of the matrices
   KK = np.zeros((ni, ns, TT))
@@ -106,9 +105,69 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
   uu = np.zeros((ni, TT))
 
   xx[:,0] = x0
-  
+
+  #Set the final conditions
+
   PP[:,:,-1] = QQT
   pp[:,-1] = qqT
 
+# Solve Riccati equation
+  for tt in reversed(range(TT-1)):
+    QQt = QQ[:,:,tt]
+    qqt = qq[:,tt][:,None]
+    RRt = RR[:,:,tt]
+    rrt = rr[:,tt][:,None]
+    AAt = AA[:,:,tt]
+    BBt = BB[:,:,tt]
+    SSt = SS[:,:,tt]
+    PPtp = PP[:,:,tt+1]
+    pptp = pp[:, tt+1][:,None]
 
+    MMt_inv = np.linalg.inv(RRt + BBt.T @ PPtp @ BBt)
+    mmt = rrt + BBt.T @ pptp
+    
+    PPt = AAt.T @ PPtp @ AAt - (BBt.T@PPtp@AAt + SSt).T @ MMt_inv @ (BBt.T@PPtp@AAt + SSt) + QQt
+    ppt = AAt.T @ pptp - (BBt.T@PPtp@AAt + SSt).T @ MMt_inv @ mmt + qqt
+
+    PP[:,:,tt] = PPt
+    pp[:,tt] = ppt.squeeze() #CHIARIMENTI SU SQUEEZE AL PROF
+
+# Evaluate KK
   
+  for tt in range(TT-1):
+    QQt = QQ[:,:,tt]
+    qqt = qq[:,tt][:,None]
+    RRt = RR[:,:,tt]
+    rrt = rr[:,tt][:,None]
+    AAt = AA[:,:,tt]
+    BBt = BB[:,:,tt]
+    SSt = SS[:,:,tt]
+
+    PPtp = PP[:,:,tt+1]
+    pptp = pp[:,tt+1][:,None]
+
+    # Check positive definiteness  CHIARIMENTI
+
+    MMt_inv = np.linalg.inv(RRt + BBt.T @ PPtp @ BBt)
+    mmt = rrt + BBt.T @ pptp
+
+    
+
+    KK[:,:,tt] = -MMt_inv@(BBt.T@PPtp@AAt + SSt)
+    sigma_t = -MMt_inv@mmt
+
+    sigma[:,tt] = sigma_t.squeeze()
+
+  for tt in range(TT - 1):
+      
+      # Trajectory
+
+      uu[:, tt] = KK[:,:,tt]@xx[:, tt] + sigma[:,tt]
+      xx_p = AA[:,:,tt]@xx[:,tt] + BB[:,:,tt]@uu[:, tt]
+
+      xx[:,tt+1] = xx_p
+
+      xxout = xx
+      uuout = uu
+
+  return KK, sigma, PP, xxout, uuout
