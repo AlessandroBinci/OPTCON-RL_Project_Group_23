@@ -1,3 +1,3 @@
-#1 Chiedere se sarebbe meglio implementare altri metodi di discretizzazione per la task 0 (es. Eulero)
+#1 Chiedere se sarebbe meglio implementare altri metodi di discretizzazione per la task 0 (es. Runge-Kutta)
 #2 Chiarimenti su .squeeze
 #3 riga 151-152 sul file Solver (riguardo il chacking the definita positività delle matrici)
