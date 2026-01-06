@@ -67,7 +67,7 @@ for tt in range(TT):
     uu[:, tt] = uu_ref[:, 0]  # Always applays u_start (Eq 1)
 
 # Defining the number of max iterations
-max_iters = 50
+max_iters = 20
 
 # Defining the matrices
 QQ = cst.QQ
@@ -77,6 +77,13 @@ SS = np.zeros((ni, ns))
 # Variables required for plots
 xx_history = []
 uu_history = []
+
+# List to store the Descent Directions (Delta x, Delta u)
+dx_history = []
+du_history = []
+cost_history = [] # List to store the costs
+# List to store data of Armijo plot (Line Search)
+global_armijo_data = []
 
 #Newton's method
 for kk in range(max_iters):
@@ -99,6 +106,8 @@ for kk in range(max_iters):
     termcost_actual = cst.termcost(xx[:,-1], xx_ref[:,-1],QQ) [0]   
     qqT_kk = cst.termcost(xx[:,-1], xx_ref[:,-1],QQ) [1]
     cost_current += termcost_actual
+    cost_history.append(cost_current)
+
     KK, sigma = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQ, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [0:2]
     dx_lin , du_lin = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQ, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [3:]
 
@@ -119,6 +128,73 @@ for kk in range(max_iters):
 
     # Add final term (Gradient_x_T * Delta_x_T)
     slope += np.dot(qqT_kk, dx_lin[:, -1])
+   # ---------------------------------------------------------
+    # INIZIO: Generazione dati Plot Armijo (Line Search) - CORRETTO
+    # ---------------------------------------------------------
+    iters_to_debug = [0, 1, 5] 
+    armijo_data_iter = {} 
+
+    if kk in iters_to_debug:
+        print(f"--- Calcolo curva Line Search (Feedback) per Iterazione {kk} ---")
+        
+        # 1. Range ampio per vedere la "buca" del costo
+        gammas_test = np.linspace(0, 1.2, 20) 
+        costs_test = []
+        armijo_thresholds = []
+        
+        # 2. Simuliamo il costo ESATTO che vedrebbe l'algoritmo
+        for g_val in gammas_test:
+            
+            # Replicazione ESATTA della logica di update del while loop
+            # x_roll evolve, e l'input si adatta grazie al feedback K
+            
+            x_roll = xx[:, 0].copy() # Stato iniziale fissato
+            # Vettore temporaneo per salvare tutta la traiettoria di test
+            xx_roll_traj = np.zeros((ns, TT))
+            xx_roll_traj[:, 0] = x_roll
+            
+            c_cum = 0
+            
+            for t in range(TT - 1):
+                # Calcolo delta_x rispetto alla traiettoria nominale attuale 'xx'
+                dx_curr = x_roll - xx[:, t]
+                
+                # Update rule con Feedback (LA STESSA DEL WHILE)
+                # u = u_nom + gamma * sigma + K * dx
+                ff_term = g_val * sigma[:, t]
+                fb_term = KK[:, :, t] @ dx_curr
+                u_applied = uu[:, t] + ff_term + fb_term
+                
+                # Costo stage
+                c_cum += cst.stage_cost(x_roll, u_applied, xx_ref[:, t], uu_ref[:, t])[0]
+                
+                # Dinamica
+                x_roll = dyn.dynamics_euler(x_roll, u_applied)[0]
+                xx_roll_traj[:, t+1] = x_roll # Salviamo per il passo dopo
+            
+            # Costo finale
+            c_cum += cst.termcost(x_roll, xx_ref[:, -1], QQ)[0]
+            
+            costs_test.append(c_cum)
+            
+            # Retta Armijo
+            thresh = cost_current + cc * g_val * slope 
+            armijo_thresholds.append(thresh)
+
+        # Salvataggio dati curva
+        armijo_data_iter['iter'] = kk
+        armijo_data_iter['gammas'] = gammas_test
+        armijo_data_iter['real_costs'] = costs_test
+        armijo_data_iter['thresholds'] = armijo_thresholds
+        
+        # Placeholder per i punti testati (li riempiamo nel while)
+        armijo_data_iter['tested_gammas'] = []
+        armijo_data_iter['tested_costs'] = []
+    # ---------------------------------------------------------
+
+    # Liste temporanee per salvare i tentativi di Armijo (Punti Arancioni)
+    temp_tested_gammas = []
+    temp_tested_costs = []
 
     while ii < max_armijo_iters:
 
@@ -150,19 +226,39 @@ for kk in range(max_iters):
         # We compute final cost on the reached final state
         term_c = cst.termcost(xx_temp[:, -1], xx_ref[:, -1], QQ)[0]
         cost_temp += term_c
+
+        # --- SALVATAGGIO TENTATIVO CORRENTE (Punto Arancione) ---
+        temp_tested_gammas.append(gamma)
+        temp_tested_costs.append(cost_temp)
+        # --------------------------------------------------------
+
         if cost_temp >= cost_current  + cc*gamma*slope:
                   # update the stepsize
                   gamma = beta* gamma
                   ii += 1
         else:
+            # --- MODIFICA QUI PER SALVARE IL PUNTO ACCETTATO ---
+            if kk in iters_to_debug and 'armijo_data_iter' in locals() and armijo_data_iter:
+                armijo_data_iter['accepted_gamma'] = gamma
+                armijo_data_iter['accepted_cost'] = cost_temp
+                # Salviamo anche la storia dei tentativi
+                armijo_data_iter['tested_gammas'] = temp_tested_gammas
+                armijo_data_iter['tested_costs'] = temp_tested_costs
+                global_armijo_data.append(armijo_data_iter)
+            # ---------------------------------------------------
             xx = xx_temp.copy()
             uu = uu_temp.copy()
 
             break
 
+    
+
+    # NEW: We save the computed descent direction
+    dx_history.append(dx_lin.copy())
+    du_history.append(du_lin.copy())
+
 xx_history.append(xx.copy())
 uu_history.append(uu.copy())
-
 # --- PLOT 1: Optimal Trajectory vs Desired Curve ---
 # Requisito Assignment: "Optimal trajectory and desired curve"
 
@@ -378,3 +474,118 @@ plt.grid(True)
 plt.tight_layout()
 plt.savefig('Task1_Evolution_Velocities_ManualColors.png', dpi=300)
 plt.show()
+
+# --- PLOT: Armijo Line Search (Updated with Tested Steps) ---
+
+if len(global_armijo_data) > 0:
+    for data in global_armijo_data:
+        iter_idx = data['iter']
+        gammas = data['gammas']
+        real_costs = data['real_costs']
+        lines = data['thresholds']
+        
+        acc_g = data['accepted_gamma']
+        acc_c = data['accepted_cost']
+        
+        # Recuperiamo i punti testati (Arancioni)
+        tested_g = data.get('tested_gammas', [])
+        tested_c = data.get('tested_costs', [])
+        
+        plt.figure(figsize=(10, 6))
+        
+        # 1. Curve
+        plt.plot(gammas, real_costs, 'g-', linewidth=2, label='Real Cost (Closed Loop)')
+        plt.plot(gammas, lines, 'g--', alpha=0.6, label='Armijo Threshold')
+        
+        # 2. Punti Testati (Orange Scatter) - Come nel file homework
+        if len(tested_g) > 0:
+            plt.scatter(tested_g, tested_c, color='orange', s=50, zorder=5, label='Tested Steps')
+        
+        # 3. Punto Accettato (Red Scatter)
+        if acc_g is not None:
+            plt.scatter(acc_g, acc_c, color='red', s=100, zorder=6, label=f'Accepted $\gamma={acc_g:.4f}$')
+            
+        plt.title(f'Newton Descent with Armijo (Iter {iter_idx})')
+        plt.xlabel(r'Step Size $\gamma$')
+        plt.ylabel(r'Cost $J$')
+        plt.grid(True)
+        plt.legend(loc='best')
+        
+        # Zoom intelligente se i costi sono molto alti all'inizio
+        if acc_c is not None:
+             # Cerchiamo di centrare la vista sulla zona interessante (bassi gamma)
+             plt.ylim(min(real_costs) * 0.9, acc_c * 3.0) 
+
+        plt.savefig(f'Task1_Armijo_LineSearch_Iter_{iter_idx}.png', dpi=300)
+        plt.show()
+
+# --- PLOT: Norm of the Descent Direction (Semi-Log Scale) ---
+# Requisito: "Norm of the descent direction along iterations (semi-logarithmic scale)"
+
+if len(dx_history) > 0 and len(du_history) > 0:
+    
+    descent_norms = []
+    iterations = []
+    
+    # Calcoliamo la norma per ogni iterazione salvata
+    for i in range(len(dx_history)):
+        dx_traj = dx_history[i] # Matrice (ns x TT)
+        du_traj = du_history[i] # Matrice (ni x TT)
+        
+        # Uniamo tutto in un unico vettore gigante per calcolare la "norma della perturbazione" totale
+        # Usiamo la norma L2 (Euclidea) di tutti i valori appiattiti
+        # Norm = sqrt( sum(dx^2) + sum(du^2) )
+        vector_dx = dx_traj.flatten()
+        vector_du = du_traj.flatten()
+        
+        total_norm = np.linalg.norm(np.concatenate((vector_dx, vector_du)))
+        
+        descent_norms.append(total_norm)
+        iterations.append(i)
+
+    # Creazione del plot
+    plt.figure(figsize=(10, 6))
+    
+    # Plot semi-logaritmico (asse Y logaritmico)
+    plt.semilogy(iterations, descent_norms, 'bo-', linewidth=2, markersize=6, label=r'$||\Delta z||$ (Descent Direction)')
+    
+    plt.title('Norm of Descent Direction along Iterations')
+    plt.xlabel('Iteration $k$')
+    plt.ylabel(r'Norm $||\Delta z^k|| = \sqrt{||\Delta x^k||^2 + ||\Delta u^k||^2}$')
+    plt.grid(True, which="both", ls="--", alpha=0.6) # Griglia specifica per log plot
+    plt.legend(loc='best')
+    
+    # Salvataggio
+    plt.savefig('Task1_Descent_Direction_Norm.png', dpi=300)
+    plt.show()
+
+else:
+    print("Nessuna storia delle direzioni salvata (dx_history vuota).")
+
+
+# --- PLOT: Cost along iterations (semi-logarithmic scale) ---
+# Requisito: "Cost along iterations (semi-logarithmic scale)"
+
+if len(cost_history) > 0:
+    plt.figure(figsize=(10, 8))
+    
+    # Uso semilogy per la scala logaritmica su Y
+    # 'c' è il colore ciano/teal simile all'immagine
+    # marker='o' per i pallini
+    plt.semilogy(range(len(cost_history)), cost_history, 
+                 color='tab:cyan', marker='o', linestyle='-', 
+                 linewidth=2, markersize=8)
+
+    plt.title("Cost along iterations (log scale)", fontsize=16)
+    plt.xlabel("Iteration", fontsize=14)
+    plt.ylabel("Cost", fontsize=14)
+    
+    # Griglia specifica per log plot (sia major che minor lines)
+    plt.grid(True, which="major", linestyle='-', linewidth=0.8)
+    plt.grid(True, which="minor", linestyle=':', linewidth=0.5)
+
+    plt.tight_layout()
+    plt.savefig('Task1_Cost_LogScale.png', dpi=300)
+    plt.show()
+else:
+    print("Nessun storico dei costi salvato.")
