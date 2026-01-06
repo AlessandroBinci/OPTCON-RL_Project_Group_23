@@ -63,8 +63,8 @@ xx = np.zeros((ns, TT))
 uu = np.zeros((ni, TT))
 
 for tt in range(TT):
-    xx[:, tt] = xx_ref[:, 0]  # It always remains to x_start (Eq 1)
-    uu[:, tt] = uu_ref[:, 0]  # Always applays u_start (Eq 1)
+    xx[:, tt] = xx_ref[:, 0]  # I'm setting the starting point as the eq point 1
+    uu[:, tt] = uu_ref[:, 0]  
 
 # Defining the number of max iterations
 max_iters = 20
@@ -78,11 +78,12 @@ SS = np.zeros((ni, ns))
 xx_history = []
 uu_history = []
 
-# List to store the Descent Directions (Delta x, Delta u)
+# List to store the Descent Directions (Delta x, Delta u) (required later for plots)
 dx_history = []
 du_history = []
-cost_history = [] # List to store the costs
-# List to store data of Armijo plot (Line Search)
+# List to store the costs (required later for plots)
+cost_history = [] 
+# List to store data of Armijo plot (Line Search) (required later for plots)
 global_armijo_data = []
 
 #Newton's method
@@ -92,110 +93,121 @@ for kk in range(max_iters):
     qq_kk = np.zeros((ns, TT))
     rr_kk = np.zeros((ni, TT))
     cost_current = 0
-    xx_history.append(xx.copy())
-    uu_history.append(uu.copy())
+    xx_history.append(xx.copy())         # saving the state at each iteration
+    uu_history.append(uu.copy())         # saving the input at each iteration
     
+    # computing the matrices for the solver and the stage cost
     for tt in range(TT-1):
         AA_kk[:,:, tt] = (dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [1]).T
         BB_kk[:,:, tt] = (dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [2]).T
         cost_actual = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [0]
         qq_kk[:,tt] = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [1]
         rr_kk[:,tt] = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [2]
-        cost_current += cost_actual
+        cost_current += cost_actual 
 
+    # computing the terminal cost and adding it to the total cost
     termcost_actual = cst.termcost(xx[:,-1], xx_ref[:,-1],QQ) [0]   
     qqT_kk = cst.termcost(xx[:,-1], xx_ref[:,-1],QQ) [1]
     cost_current += termcost_actual
-    cost_history.append(cost_current)
+    cost_history.append(cost_current) # saving the cost at each iteration
 
+    # Getting the gain matrix and the feedforward term from the ltv_LQR solver
     KK, sigma = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQ, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [0:2]
+    # Getting the descent directions from the ltv_LQR solver
     dx_lin , du_lin = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQ, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [3:]
 
     #Armijo
+
+    # Setting the Armijo's parameters
     gamma = 1
     beta = 0.7
     cc = 0.5
     max_armijo_iters = 10
     ii = 1
     slope = 0
+
     for tt in range(TT):
-         # Dot Product of Gradient_x * Delta_x_lin
+        # Dot Product of Gradient_x * Delta_x_lin: we're computing the slope for the Armijo loop
         slope += np.dot(qq_kk[:, tt], dx_lin[:, tt])
     
-        # If we are not in the last step, we add Gradient_u * Delta_u_lin
+        # If we are not in the last step, we add Gradient_u * Delta_u_lin (because in the last time instant T, uu isn't defined)
         if tt < TT - 1:
             slope += np.dot(rr_kk[:, tt], du_lin[:, tt])
 
-    # Add final term (Gradient_x_T * Delta_x_T)
+    # Adding slope term for the final time T (Gradient_x_T * Delta_x_T)
     slope += np.dot(qqT_kk, dx_lin[:, -1])
-   # ---------------------------------------------------------
-    # INIZIO: Generazione dati Plot Armijo (Line Search) - CORRETTO
     # ---------------------------------------------------------
-    iters_to_debug = [0, 1, 5] 
-    armijo_data_iter = {} 
+    # Starting generating data for Armijo plot (Line Search)
+    # ---------------------------------------------------------
+    iters_to_debug = [0, 1, 5] # iteration samples of which we'll plot armijo
+    armijo_data_iter = {}  # dictionary to store iterations' data
 
+    # Computing Line Search curve (Feedback) only for iteration {kk} equal to 0,1,5
     if kk in iters_to_debug:
-        print(f"--- Calcolo curva Line Search (Feedback) per Iterazione {kk} ---")
+
+        print(f"Computing Line Search curve (Feedback) only for iteration {kk}")
         
-        # 1. Range ampio per vedere la "buca" del costo
+        # Defining X-axis (20 points between 0 and 1.2)
         gammas_test = np.linspace(0, 1.2, 20) 
+        # Initializing lists to store later the real cost and the armijo threshold line
         costs_test = []
         armijo_thresholds = []
         
-        # 2. Simuliamo il costo ESATTO che vedrebbe l'algoritmo
+        # Simulating the exact cost that the algorithm would see
         for g_val in gammas_test:
             
-            # Replicazione ESATTA della logica di update del while loop
-            # x_roll evolve, e l'input si adatta grazie al feedback K
+            # Exact reply of the while loop update logic
+            # x_roll changes and the input adapts due to the feedback K
             
-            x_roll = xx[:, 0].copy() # Stato iniziale fissato
-            # Vettore temporaneo per salvare tutta la traiettoria di test
+            x_roll = xx[:, 0].copy() # initial state copy
+            # Temporary vector used to store the whole trajectory test
             xx_roll_traj = np.zeros((ns, TT))
             xx_roll_traj[:, 0] = x_roll
             
             c_cum = 0
             
             for t in range(TT - 1):
-                # Calcolo delta_x rispetto alla traiettoria nominale attuale 'xx'
+                # Computing delta_x wrt actual nominal trajectory 'xx'
                 dx_curr = x_roll - xx[:, t]
                 
-                # Update rule con Feedback (LA STESSA DEL WHILE)
+                # Updating feedback rule (same of while loop)
                 # u = u_nom + gamma * sigma + K * dx
                 ff_term = g_val * sigma[:, t]
                 fb_term = KK[:, :, t] @ dx_curr
                 u_applied = uu[:, t] + ff_term + fb_term
                 
-                # Costo stage
+                # Stage cost
                 c_cum += cst.stage_cost(x_roll, u_applied, xx_ref[:, t], uu_ref[:, t])[0]
                 
-                # Dinamica
+                # Dynamics
                 x_roll = dyn.dynamics_euler(x_roll, u_applied)[0]
                 xx_roll_traj[:, t+1] = x_roll # Salviamo per il passo dopo
             
-            # Costo finale
+            # Final cost
             c_cum += cst.termcost(x_roll, xx_ref[:, -1], QQ)[0]
             
-            costs_test.append(c_cum)
+            costs_test.append(c_cum) # Saving the cost
             
-            # Retta Armijo
+            # Armijo line
             thresh = cost_current + cc * g_val * slope 
             armijo_thresholds.append(thresh)
 
-        # Salvataggio dati curva
+        # Saving curve data
         armijo_data_iter['iter'] = kk
         armijo_data_iter['gammas'] = gammas_test
         armijo_data_iter['real_costs'] = costs_test
         armijo_data_iter['thresholds'] = armijo_thresholds
         
-        # Placeholder per i punti testati (li riempiamo nel while)
+        # Placeholder for tested points
         armijo_data_iter['tested_gammas'] = []
         armijo_data_iter['tested_costs'] = []
     # ---------------------------------------------------------
 
-    # Liste temporanee per salvare i tentativi di Armijo (Punti Arancioni)
+    # Temporary lists to store Armijo stepsizes (Orange points)
     temp_tested_gammas = []
     temp_tested_costs = []
 
+    # Real Armijo loop
     while ii < max_armijo_iters:
 
         # Temporary solution update
@@ -227,25 +239,24 @@ for kk in range(max_iters):
         term_c = cst.termcost(xx_temp[:, -1], xx_ref[:, -1], QQ)[0]
         cost_temp += term_c
 
-        # --- SALVATAGGIO TENTATIVO CORRENTE (Punto Arancione) ---
+        # Saving the stepsize attempt (Orange point) ---
         temp_tested_gammas.append(gamma)
         temp_tested_costs.append(cost_temp)
-        # --------------------------------------------------------
-
+       
         if cost_temp >= cost_current  + cc*gamma*slope:
-                  # update the stepsize
+                  # updating the stepsize
                   gamma = beta* gamma
                   ii += 1
         else:
-            # --- MODIFICA QUI PER SALVARE IL PUNTO ACCETTATO ---
+            # Saving the accepted point
             if kk in iters_to_debug and 'armijo_data_iter' in locals() and armijo_data_iter:
                 armijo_data_iter['accepted_gamma'] = gamma
                 armijo_data_iter['accepted_cost'] = cost_temp
-                # Salviamo anche la storia dei tentativi
+                # Saving the history of the attempts
                 armijo_data_iter['tested_gammas'] = temp_tested_gammas
                 armijo_data_iter['tested_costs'] = temp_tested_costs
                 global_armijo_data.append(armijo_data_iter)
-            # ---------------------------------------------------
+            
             xx = xx_temp.copy()
             uu = uu_temp.copy()
 
@@ -253,12 +264,13 @@ for kk in range(max_iters):
 
     
 
-    # NEW: We save the computed descent direction
+    # Saving the computed descent direction
     dx_history.append(dx_lin.copy())
     du_history.append(du_lin.copy())
 
 xx_history.append(xx.copy())
 uu_history.append(uu.copy())
+
 # --- PLOT 1: Optimal Trajectory vs Desired Curve ---
 # Requisito Assignment: "Optimal trajectory and desired curve"
 
