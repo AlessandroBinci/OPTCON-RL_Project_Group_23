@@ -16,6 +16,7 @@ sys.path.append(src_path)
 ### --- IMPORTS --- ###
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import sympy as sp
 import math
 from mpl_toolkits import mplot3d # used for 3D plot
@@ -24,6 +25,7 @@ import signal
 from scipy.optimize import minimize
 from matplotlib.animation import FuncAnimation
 import control 
+import random
 
 import dynamics as dyn
 import equilibrium as eq
@@ -72,6 +74,10 @@ QQ = cst.QQ
 RR = cst.RR
 SS = np.zeros((ni, ns))
 
+# Variables required for plots
+xx_history = []
+uu_history = []
+
 #Newton's method
 for kk in range(max_iters):
     AA_kk = np.zeros((ns, ns, TT))          #initialization of matrices
@@ -79,6 +85,8 @@ for kk in range(max_iters):
     qq_kk = np.zeros((ns, TT))
     rr_kk = np.zeros((ni, TT))
     cost_current = 0
+    xx_history.append(xx.copy())
+    uu_history.append(uu.copy())
     
     for tt in range(TT-1):
         AA_kk[:,:, tt] = (dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [1]).T
@@ -152,103 +160,221 @@ for kk in range(max_iters):
 
             break
 
+xx_history.append(xx.copy())
+uu_history.append(uu.copy())
 
-# --- PLOTTING RESULTS ---
-# We create a time vector which is coherent with the dimensions
+# --- PLOT 1: Optimal Trajectory vs Desired Curve ---
+# Requisito Assignment: "Optimal trajectory and desired curve"
+
+# 1. Definizione dell'asse temporale
+# Assumiamo che tf e TT siano definiti nel tuo main
 time_axis = np.linspace(0, tf, TT)
 
+# 2. Creazione della figura
+plt.figure(figsize=(10, 8))
+
+# --- Subplot 1: Primo Stato (Theta 1) ---
+plt.subplot(3, 1, 1)
+# Desired (Riferimento) - Linea tratteggiata nera
+plt.plot(time_axis, xx_ref[0, :], 'k--', linewidth=2, label=r'$\theta_{1,des}$ (Desired)')
+# Optimal (Ottima) - Linea solida colorata
+plt.plot(time_axis, xx[0, :], 'b-', linewidth=2, label=r'$\theta_{1,opt}$ (Optimal)')
+plt.ylabel(r'$\theta_1$ [rad]')
+plt.title('Optimal Trajectory vs Desired Curve')
+plt.grid(True)
+plt.legend(loc='best')
+
+# --- Subplot 2: Secondo Stato (Theta 2) ---
+plt.subplot(3, 1, 2)
+# Desired
+plt.plot(time_axis, xx_ref[1, :], 'k--', linewidth=2, label=r'$\theta_{2,des}$ (Desired)')
+# Optimal
+plt.plot(time_axis, xx[1, :], 'r-', linewidth=2, label=r'$\theta_{2,opt}$ (Optimal)')
+plt.ylabel(r'$\theta_2$ [rad]')
+plt.grid(True)
+plt.legend(loc='best')
+
+# --- Subplot 3: Input (Coppia) ---
+plt.subplot(3, 1, 3)
+# Desired
+plt.plot(time_axis, uu_ref[0, :], 'k--', linewidth=2, label=r'$u_{des}$ (Desired)')
+# Optimal
+plt.plot(time_axis, uu[0, :], 'g-', linewidth=2, label=r'$u_{opt}$ (Optimal)')
+plt.ylabel(r'Torque [Nm]')
+plt.xlabel(r'Time [s]')
+plt.grid(True)
+plt.legend(loc='best')
+
+# Ottimizzazione spazi e salvataggio
+plt.tight_layout()
+
+# Salva l'immagine per il report (opzionale, rimuovi se non vuoi salvare)
+plt.savefig('Task1_Optimal_vs_Desired.png', dpi=300)
+
+# Mostra a video
+plt.show()
+
+# --- PLOT 1-bis: Optimal Velocities vs Desired (Zero) ---
+# Visualizzazione degli stati x3 (Velocità Theta 1) e x4 (Velocità Theta 2)
+
+plt.figure(figsize=(10, 8))
+
+# --- Subplot 1: Terzo Stato (x3 - Velocità Theta 1) ---
+plt.subplot(2, 1, 1)
+# Desired (Riferimento) - Solitamente zero
+plt.plot(time_axis, xx_ref[2, :], 'k--', linewidth=2, label=r'$\dot{\theta}_{1,des}$ (Desired)')
+# Optimal (Ottima)
+plt.plot(time_axis, xx[2, :], 'b-', linewidth=2, label=r'$\dot{\theta}_{1,opt}$ (Optimal)')
+plt.ylabel(r'$\dot{\theta}_1$ [rad/s]')
+plt.title('Optimal Velocities vs Desired')
+plt.grid(True)
+plt.legend(loc='best')
+
+# --- Subplot 2: Quarto Stato (x4 - Velocità Theta 2) ---
+plt.subplot(2, 1, 2)
+# Desired (Riferimento) - Solitamente zero
+plt.plot(time_axis, xx_ref[3, :], 'k--', linewidth=2, label=r'$\dot{\theta}_{2,des}$ (Desired)')
+# Optimal (Ottima)
+plt.plot(time_axis, xx[3, :], 'r-', linewidth=2, label=r'$\dot{\theta}_{2,opt}$ (Optimal)')
+plt.ylabel(r'$\dot{\theta}_2$ [rad/s]')
+plt.xlabel(r'Time [s]')
+plt.grid(True)
+plt.legend(loc='best')
+
+plt.tight_layout()
+plt.savefig('Task1_Velocities.png', dpi=300) # Salva per il report
+plt.show()
+
+
+# 1. Define time axis
+time_axis = np.linspace(0, tf, TT)
+
+# 2. Select specific iterations to plot: [0, 17, 34, Final]
+total_iters = len(xx_history)
+desired_indices = [0, 1, 2, total_iters - 1]
+
+# Filter indices to ensure they exist and avoid duplicates
+indices_to_plot = []
+for idx in desired_indices:
+    if idx < total_iters:
+        if idx not in indices_to_plot:
+            indices_to_plot.append(idx)
+
+print(f"Plotting iterations: {indices_to_plot}")
+
+# 3. Retrieve trajectory data
+xx_plot_list = [xx_history[i] for i in indices_to_plot]
+uu_plot_list = [uu_history[i] for i in indices_to_plot]
+num_plots = len(indices_to_plot)
+
+# --- 4. MANUAL COLOR MANAGEMENT ---
+# Qui definisci manualmente il colore per ogni curva che verrà plottata.
+# L'ordine corrisponde a: [Iter 0, Iter 1, Iter 2, Finale]
+# Puoi usare nomi ('red', 'blue', 'grey') o Hex Code ('#FFA500')
+
+custom_colors = [
+    'tab:orange',    # Iter 0 (Initial Guess) - Grigio per non distrarre
+    'tab:blue',  # Iter 1 - Viola per contrasto
+    'tab:green',  # Iter 2 - Arancione per transizione
+    'tab:red'     # Final (Optimal) - Blu (Coerente col Plot 1)
+]
+
+# Sicurezza: se per caso hai meno iterazioni, tronchiamo la lista colori
+if len(custom_colors) > num_plots:
+    current_colors = custom_colors[:num_plots]
+else:
+    # Se ne mancano, ripetiamo l'ultimo (caso raro)
+    current_colors = custom_colors + [custom_colors[-1]]*(num_plots-len(custom_colors))
+
+# Se vuoi l'ottima finale in Rosso invece che Blu, cambia l'ultimo elemento della lista sopra.
+
+LW = 1.5 # Line Width
+
+# --- FIGURE 1: Positions and Input ---
 plt.figure(figsize=(12, 10))
 
-# --- 1. First State (x1 - Theta 1) ---
+# Subplot 1: Theta 1 Evolution
 plt.subplot(3, 1, 1)
-plt.plot(time_axis, np.rad2deg(xx_ref[0, :]), 'k--', linewidth=2, label=r'$\theta_{1,ref}$ (Desiderata)')
-plt.plot(time_axis, np.rad2deg(xx[0, :]), 'b-', linewidth=2, label=r'$\theta_{1,opt}$ (Ottima)')
-plt.ylabel(r'$\theta_1$ [deg]')
-plt.title('Confronto Traiettorie: Riferimento vs Ottimo')
+# Reference (Nero tratteggiato)
+plt.plot(time_axis, xx_ref[0, :], 'k--', linewidth=LW, label=r'$\theta_{1,des}$ (Reference)')
+
+for k, idx in enumerate(indices_to_plot):
+    # Label definition
+    if idx == 0:
+        lbl = 'Initial Guess (Iter 0)'
+    elif idx == total_iters - 1:
+        lbl = 'Optimal (Final)'
+    else:
+        lbl = f'Iter {idx}'
+    
+    # Plot using manual colors
+    plt.plot(time_axis, xx_plot_list[k][0, :], 
+             color=current_colors[k], linestyle='-', linewidth=LW, label=lbl)
+
+plt.ylabel(r'$\theta_1$ [rad]')
+plt.title('Evolution of Trajectories: Positions and Input')
 plt.grid(True)
-plt.legend(loc='best')
+plt.legend(loc='best', fontsize='small')
 
-# --- 2. Second State (x2 - Theta 2 or Angular Velocity) ---
-# NOTE: If your system has 2 states (es. pos and vel, or theta1 and theta2), we plot the second one.
-if ns > 1:
-    plt.subplot(3, 1, 2)
-    # Se il secondo stato è una velocità, lasciamo rad/s, se è un angolo convertiamo.
-    # Assumo sia un angolo o velocità, qui plotto il valore puro o convertito se necessario.
-    # Per coerenza col primo plot, mostro il valore numerico diretto o convertito in gradi se è un angolo.
-    plt.plot(time_axis, np.rad2deg(xx_ref[1, :]), 'k--', linewidth=2, label=r'$x_{2,ref}$')
-    plt.plot(time_axis, np.rad2deg(xx[1, :]), 'r-', linewidth=2, label=r'$x_{2,opt}$')
-    plt.ylabel(r'$x_2$ [deg o unit]') # Adatta l'etichetta alla tua dinamica
-    plt.grid(True)
-    plt.legend(loc='best')
+# Subplot 2: Theta 2 Evolution
+plt.subplot(3, 1, 2)
+plt.plot(time_axis, xx_ref[1, :], 'k--', linewidth=LW, label=r'$\theta_{2,des}$')
+for k, idx in enumerate(indices_to_plot):
+    plt.plot(time_axis, xx_plot_list[k][1, :], 
+             color=current_colors[k], linestyle='-', linewidth=LW)
+plt.ylabel(r'$\theta_2$ [rad]')
+plt.grid(True)
 
-# --- 3. Input (u - Coppia) ---
+# Subplot 3: Input Evolution
 plt.subplot(3, 1, 3)
-plt.plot(time_axis, uu_ref[0, :], 'k--', linewidth=2, label=r'$u_{ref}$ (Desiderata)')
-plt.plot(time_axis, uu[0, :], 'g-', linewidth=2, label=r'$u_{opt}$ (Ottima)')
-plt.ylabel('Input Torque [Nm]')
+plt.plot(time_axis, uu_ref[0, :], 'k--', linewidth=LW, label=r'$u_{des}$')
+for k, idx in enumerate(indices_to_plot):
+    plt.plot(time_axis, uu_plot_list[k][0, :], 
+             color=current_colors[k], linestyle='-', linewidth=LW)
+plt.ylabel('Torque [Nm]')
 plt.xlabel('Time [s]')
 plt.grid(True)
-plt.legend(loc='best')
 
 plt.tight_layout()
+plt.savefig('Task1_Evolution_Pos_Input_ManualColors.png', dpi=300)
 plt.show()
 
-# --- 4. Plot Errore (Opzionale ma utile) ---
-plt.figure(figsize=(10, 5))
-err_norm = np.linalg.norm(xx - xx_ref, axis=0)
-plt.plot(time_axis, err_norm, 'm-', linewidth=2)
-plt.title('Norma dell\'errore di stato $||x - x_{ref}||$')
+
+# --- FIGURE 2: Velocities Evolution ---
+plt.figure(figsize=(10, 8))
+
+# Subplot 1: Velocity Theta 1
+plt.subplot(2, 1, 1)
+plt.plot(time_axis, xx_ref[2, :], 'k--', linewidth=LW, label=r'$\dot{\theta}_{1,des}$')
+
+for k, idx in enumerate(indices_to_plot):
+    # Legend only on top
+    if idx == 0:
+        lbl = 'Initial Guess (Iter 0)'
+    elif idx == total_iters - 1:
+        lbl = 'Optimal (Final)'
+    else:
+        lbl = f'Iter {idx}'
+        
+    plt.plot(time_axis, xx_plot_list[k][2, :], 
+             color=current_colors[k], linestyle='-', linewidth=LW, label=lbl)
+
+plt.ylabel(r'$\dot{\theta}_1$ [rad/s]')
+plt.title('Evolution of Trajectories: Velocities')
+plt.grid(True)
+plt.legend(loc='best', fontsize='small')
+
+# Subplot 2: Velocity Theta 2
+plt.subplot(2, 1, 2)
+plt.plot(time_axis, xx_ref[3, :], 'k--', linewidth=LW, label=r'$\dot{\theta}_{2,des}$')
+for k, idx in enumerate(indices_to_plot):
+    plt.plot(time_axis, xx_plot_list[k][3, :], 
+             color=current_colors[k], linestyle='-', linewidth=LW)
+
+plt.ylabel(r'$\dot{\theta}_2$ [rad/s]')
 plt.xlabel('Time [s]')
-plt.ylabel('Error Norm')
 plt.grid(True)
-plt.yscale('log') # Scala logaritmica utile per vedere la convergenza fine
-plt.show()
-
-
-
-
-
-
-
-
-
-# Asse temporale
-time = np.linspace(0, tf, xx_ref.shape[1])
-
-# --- 3. PLOTTING ---
-plt.figure(figsize=(10, 10))
-
-# --- PLOT THETA 1 (Stato 0) ---
-plt.subplot(3, 1, 1)
-# Convertiamo in gradi SOLO per il grafico
-plt.plot(time, np.rad2deg(xx_ref[0, :]), 'b-', linewidth=2, label=r'$\theta_1$ Rif')
-plt.ylabel(r'$\theta_1$ [deg]')
-plt.title('Traiettoria di Riferimento (Step)')
-plt.grid(True)
-plt.legend()
-
-# --- PLOT THETA 2 (Stato 1) ---
-# Controlliamo che esista almeno un secondo stato
-if ns > 1:
-    plt.subplot(3, 1, 2)
-    plt.plot(time, np.rad2deg(xx_ref[1, :]), 'r-', linewidth=2, label=r'$\theta_2$ Rif')
-    plt.ylabel(r'$\theta_2$ [deg]')
-    plt.grid(True)
-    plt.legend()
-
-# --- PLOT INPUT (Coppia) ---
-plt.subplot(3, 1, 3)
-# L'input è solitamente in Nm, non si converte in gradi!
-plt.plot(time, uu_ref[0, :], 'g-', linewidth=2, label=r'$u_1$ (Coppia)')
-
-# Se c'è un secondo input, lo plottiamo
-if ni > 1:
-    plt.plot(time, uu_ref[1, :], 'orange', linestyle='--', linewidth=2, label=r'$u_2$')
-
-plt.ylabel('Input [Nm]')
-plt.xlabel('Tempo [s]')
-plt.grid(True)
-plt.legend()
 
 plt.tight_layout()
+plt.savefig('Task1_Evolution_Velocities_ManualColors.png', dpi=300)
 plt.show()
