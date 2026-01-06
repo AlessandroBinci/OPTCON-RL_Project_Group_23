@@ -57,8 +57,12 @@ xx_ref, uu_ref = ref_traj.gen(tf, dt, ns, ni, th1_init, tau1_des, th1_final)
 
 # Defining the initial guess
 
-xx = xx_ref.copy() #useful to ceate a copy of the target 
-uu = uu_ref.copy()
+xx = np.zeros((ns, TT))
+uu = np.zeros((ni, TT))
+
+for t in range(TT):
+    xx[:, t] = xx_ref[:, 0]  # Rimane sempre a x_start (Eq 1)
+    uu[:, t] = uu_ref[:, 0]  # Applica sempre u_start (Eq 1)
 
 # Defining the number of max iterations
 max_iters = 50
