@@ -104,7 +104,7 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
   xx = np.zeros((ns, TT))
   uu = np.zeros((ni, TT))
 
-  xx[:,0] = x0
+  xx[:,0] = x0    # the first variation delta_x0 = 0
 
   #Set the final conditions
 
@@ -162,8 +162,8 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
       
       # Trajectory
 
-      uu[:, tt] = KK[:,:,tt]@xx[:, tt] + sigma[:,tt]
-      xx_p = AA[:,:,tt]@xx[:,tt] + BB[:,:,tt]@uu[:, tt]
+      uu[:, tt] = KK[:,:,tt]@xx[:, tt] + sigma[:,tt]    # updating variation deltau of the LQR problem
+      xx_p = AA[:,:,tt]@xx[:,tt] + BB[:,:,tt]@uu[:, tt] # updating variation deltax of the LQR problem
 
       xx[:,tt+1] = xx_p
 

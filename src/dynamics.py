@@ -8,7 +8,7 @@ import sympy as sy
 ns = 4
 ni = 1
 
-dt = 1e-3 # discretization stepsize - Forward Euler
+dt = 1e-2 # discretization stepsize - Forward Euler
 
 # Dynamics parameters
 

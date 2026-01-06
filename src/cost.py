@@ -21,7 +21,7 @@ Q4 = 0.1
 
 QQ = np.diag([Q1,Q2,Q3,Q4])
 
-RR = 0.1
+RR = np.array([[0.1]])
 
 def stage_cost(xx_t, uu_t, xx_ref_t, uu_ref_t):
     '''

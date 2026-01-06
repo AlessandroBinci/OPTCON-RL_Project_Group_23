@@ -2,6 +2,18 @@
 # Group 23: Alessandro Binci, Alessandro Tampieri, Lorenzo Tucci
 # Problem 2 with set ofparameters 1
 
+import sys
+import os
+
+# Ottieni il percorso della cartella corrente
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Costruisci il percorso alla cartella 'src'
+src_path = os.path.join(current_dir, 'src')
+
+# Aggiungi 'src' ai percorsi dove Python cerca i moduli
+sys.path.append(src_path)
+
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
@@ -45,7 +57,7 @@ xx_ref, uu_ref = ref_traj.gen(tf, dt, ns, ni, th1_init, tau1_des, th1_final)
 
 # Defining the initial guess
 
-xx = xx_ref[:,0].copy() #useful to ceate a copy of the target 
+xx = xx_ref.copy() #useful to ceate a copy of the target 
 uu = uu_ref.copy()
 
 # Defining the number of max iterations
@@ -63,24 +75,130 @@ for kk in range(max_iters):
     qq_kk = np.zeros((ns, TT))
     rr_kk = np.zeros((ni, TT))
     cost_current = 0
-
-    for tt in range(TT):
-        AA_kk[:,:, tt] = dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [1]
-        BB_kk[:,:, tt] = dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [2]
+    #descent= np.zeros()
+    for tt in range(TT-1):
+        AA_kk[:,:, tt] = (dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [1]).T
+        BB_kk[:,:, tt] = (dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [2]).T
         cost_actual = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [0]
-        qq_kk[:,TT] = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [1]
-        rr_kk[:,TT] = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [2]
+        qq_kk[:,tt] = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [1]
+        rr_kk[:,tt] = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [2]
         cost_current += cost_actual
 
-    termcost_actual = cst.termcost(xx[:,-1], xx_ref[:,-1]) [0]   
-    qqT_kk = cst.termcost(xx[:,-1], xx_ref[:,-1]) [1]
+    termcost_actual = cst.termcost(xx[:,-1], xx_ref[:,-1],QQ) [0]   
+    qqT_kk = cst.termcost(xx[:,-1], xx_ref[:,-1],QQ) [1]
     cost_current += termcost_actual
     KK, sigma = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQ, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [0:2]
+    dx_lin , du_lin = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQ, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [3:]
+
     #Armijo
     gamma = 1
     beta = 0.7
-    c = 0.5
+    cc = 0.5
     max_armijo_iters = 10
+    ii = 1
+    slope = 0
+    for tt in range(TT):
+         # Prodotto scalare Gradiente_x * Delta_x_lineare
+        slope += np.dot(qq_kk[:, tt], dx_lin[:, tt])
+    
+        # Se non siamo all'ultimo step, aggiungiamo Gradiente_u * Delta_u_lineare
+        if tt < TT - 1:
+            slope += np.dot(rr_kk[:, tt], du_lin[:, tt])
+
+    # Aggiungi il termine finale (Gradiente_x_T * Delta_x_T)
+    slope += np.dot(qqT_kk, dx_lin[:, -1])
+
+    while ii < max_armijo_iters:
+
+        # Temporary solution update
+
+        xx_temp = np.zeros((ns,TT))
+        uu_temp=np.zeros((ni,TT))
+        xx_temp[:,0] = xx[:, 0]
+        cost_temp = 0
+        for tt in range(TT-1):
+
+            # Questo è il termine (x_t)^k+1 - (x_t)^k
+            delta_x = xx_temp[:, tt] - xx[:, tt]
+        
+            # u_new = u_old + gamma * sigma + K * delta_x
+            # NOTA: u_old è uu[:,tt], sigma è il feedforward, K è il feedback
+            ff_term = gamma * sigma[:, tt]
+            fb_term = KK[:, :, tt] @ delta_x
+        
+            uu_temp[:, tt] = uu[:, tt] + ff_term + fb_term
+
+            # dynamics_euler restituisce [x_next, A, B], prendiamo solo [0]
+            xx_temp[:, tt+1] = dyn.dynamics_euler(xx_temp[:, tt], uu_temp[:, tt])[0]
+
+            # stage_cost restituisce [costo, grad_x, grad_u], prendiamo solo [0]
+            step_c = cst.stage_cost(xx_temp[:, tt], uu_temp[:, tt], xx_ref[:, tt], uu_ref[:, tt])[0]
+            cost_temp += step_c
+        
+        # Calcoliamo il costo finale sullo stato finale raggiunto
+        term_c = cst.termcost(xx_temp[:, -1], xx_ref[:, -1], QQ)[0]
+        cost_temp += term_c
+        if cost_temp >= cost_current  + cc*gamma*slope:
+                  # update the stepsize
+                  gamma = beta* gamma
+                  ii += 1
+        else:
+            xx = xx_temp.copy()
+            uu = uu_temp.copy()
+
+            break
+
+
+# --- PLOTTING RESULTS ---
+# Creiamo un vettore tempo coerente con le dimensioni
+time_axis = np.linspace(0, tf, TT)
+
+plt.figure(figsize=(12, 10))
+
+# --- 1. Primo Stato (x1 - Theta 1) ---
+plt.subplot(3, 1, 1)
+plt.plot(time_axis, np.rad2deg(xx_ref[0, :]), 'k--', linewidth=2, label=r'$\theta_{1,ref}$ (Desiderata)')
+plt.plot(time_axis, np.rad2deg(xx[0, :]), 'b-', linewidth=2, label=r'$\theta_{1,opt}$ (Ottima)')
+plt.ylabel(r'$\theta_1$ [deg]')
+plt.title('Confronto Traiettorie: Riferimento vs Ottimo')
+plt.grid(True)
+plt.legend(loc='best')
+
+# --- 2. Secondo Stato (x2 - Theta 2 o Velocità) ---
+# Nota: Se il tuo sistema ha 2 stati (es. pos e vel, o theta1 e theta2), plottiamo il secondo.
+if ns > 1:
+    plt.subplot(3, 1, 2)
+    # Se il secondo stato è una velocità, lasciamo rad/s, se è un angolo convertiamo.
+    # Assumo sia un angolo o velocità, qui plotto il valore puro o convertito se necessario.
+    # Per coerenza col primo plot, mostro il valore numerico diretto o convertito in gradi se è un angolo.
+    plt.plot(time_axis, np.rad2deg(xx_ref[1, :]), 'k--', linewidth=2, label=r'$x_{2,ref}$')
+    plt.plot(time_axis, np.rad2deg(xx[1, :]), 'r-', linewidth=2, label=r'$x_{2,opt}$')
+    plt.ylabel(r'$x_2$ [deg o unit]') # Adatta l'etichetta alla tua dinamica
+    plt.grid(True)
+    plt.legend(loc='best')
+
+# --- 3. Input (u - Coppia) ---
+plt.subplot(3, 1, 3)
+plt.plot(time_axis, uu_ref[0, :], 'k--', linewidth=2, label=r'$u_{ref}$ (Desiderata)')
+plt.plot(time_axis, uu[0, :], 'g-', linewidth=2, label=r'$u_{opt}$ (Ottima)')
+plt.ylabel('Input Torque [Nm]')
+plt.xlabel('Time [s]')
+plt.grid(True)
+plt.legend(loc='best')
+
+plt.tight_layout()
+plt.show()
+
+# --- 4. Plot Errore (Opzionale ma utile) ---
+plt.figure(figsize=(10, 5))
+err_norm = np.linalg.norm(xx - xx_ref, axis=0)
+plt.plot(time_axis, err_norm, 'm-', linewidth=2)
+plt.title('Norma dell\'errore di stato $||x - x_{ref}||$')
+plt.xlabel('Time [s]')
+plt.ylabel('Error Norm')
+plt.grid(True)
+plt.yscale('log') # Scala logaritmica utile per vedere la convergenza fine
+plt.show()
 
 
 
