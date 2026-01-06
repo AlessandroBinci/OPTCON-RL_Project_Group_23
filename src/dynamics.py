@@ -160,23 +160,23 @@ def dynamics_rungekutta(xx,uu):
     xx = np.array(xx).reshape(-1)
     uu = np.array(uu).reshape(-1)
     
-    # --- A. Integrazione RK4 Numerica ---
-    # Passo 1: k1 = f(x, u)
+    # --- A. RK4 Numeric Iteration ---
+    # Step 1: k1 = f(x, u)
     k1 = np.array(f_cont_func(xx, uu)).squeeze()
     
-    # Passo 2: k2 = f(x + 0.5*dt*k1, u)
+    # Step 2: k2 = f(x + 0.5*dt*k1, u)
     x_k2 = xx + 0.5 * dt * k1
     k2 = np.array(f_cont_func(x_k2, uu)).squeeze()
     
-    # Passo 3: k3 = f(x + 0.5*dt*k2, u)
+    # Step 3: k3 = f(x + 0.5*dt*k2, u)
     x_k3 = xx + 0.5 * dt * k2
     k3 = np.array(f_cont_func(x_k3, uu)).squeeze()
     
-    # Passo 4: k4 = f(x + dt*k3, u)
+    # Step 4: k4 = f(x + dt*k3, u)
     x_k4 = xx + dt * k3
     k4 = np.array(f_cont_func(x_k4, uu)).squeeze()
     
-    # Aggiornamento stato
+    # Update of the state
     xxp_rk = xx + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
     #xxp_rk = np.array(f_step_func_rk(xx, uu)).squeeze() # next state vector
     #dfx_rk = np.array(dfx_func_rk(xx, uu))

@@ -1,19 +1,19 @@
 # Optimal Control and Reinforcement Learning Project 2025-2026
 # Group 23: Alessandro Binci, Alessandro Tampieri, Lorenzo Tucci
-# Problem 2 with set ofparameters 1
+# Problem 2 with set of parameters 1
 
 import sys
 import os
 
-# Ottieni il percorso della cartella corrente
+### --- ADDED TO USE SRC FOLDER --- ###
+# In this way we obtain tha path of the current folder
 current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Costruisci il percorso alla cartella 'src'
+# We build the path to 'src' folder
 src_path = os.path.join(current_dir, 'src')
-
-# Aggiungi 'src' ai percorsi dove Python cerca i moduli
+# Add 'src' folder tho the paths where Python search the modules
 sys.path.append(src_path)
 
+### --- IMPORTS --- ###
 import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sp
@@ -60,9 +60,9 @@ xx_ref, uu_ref = ref_traj.gen(tf, dt, ns, ni, th1_init, tau1_des, th1_final)
 xx = np.zeros((ns, TT))
 uu = np.zeros((ni, TT))
 
-for t in range(TT):
-    xx[:, t] = xx_ref[:, 0]  # Rimane sempre a x_start (Eq 1)
-    uu[:, t] = uu_ref[:, 0]  # Applica sempre u_start (Eq 1)
+for tt in range(TT):
+    xx[:, tt] = xx_ref[:, 0]  # It always remains to x_start (Eq 1)
+    uu[:, tt] = uu_ref[:, 0]  # Always applays u_start (Eq 1)
 
 # Defining the number of max iterations
 max_iters = 50
@@ -79,7 +79,7 @@ for kk in range(max_iters):
     qq_kk = np.zeros((ns, TT))
     rr_kk = np.zeros((ni, TT))
     cost_current = 0
-    #descent= np.zeros()
+    
     for tt in range(TT-1):
         AA_kk[:,:, tt] = (dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [1]).T
         BB_kk[:,:, tt] = (dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [2]).T
@@ -102,14 +102,14 @@ for kk in range(max_iters):
     ii = 1
     slope = 0
     for tt in range(TT):
-         # Prodotto scalare Gradiente_x * Delta_x_lineare
+         # Dot Product of Gradient_x * Delta_x_lin
         slope += np.dot(qq_kk[:, tt], dx_lin[:, tt])
     
-        # Se non siamo all'ultimo step, aggiungiamo Gradiente_u * Delta_u_lineare
+        # If we are not in the last step, we add Gradient_u * Delta_u_lin
         if tt < TT - 1:
             slope += np.dot(rr_kk[:, tt], du_lin[:, tt])
 
-    # Aggiungi il termine finale (Gradiente_x_T * Delta_x_T)
+    # Add final term (Gradient_x_T * Delta_x_T)
     slope += np.dot(qqT_kk, dx_lin[:, -1])
 
     while ii < max_armijo_iters:
@@ -122,24 +122,24 @@ for kk in range(max_iters):
         cost_temp = 0
         for tt in range(TT-1):
 
-            # Questo è il termine (x_t)^k+1 - (x_t)^k
+            # This is the term: (x_t)^k+1 - (x_t)^k
             delta_x = xx_temp[:, tt] - xx[:, tt]
         
             # u_new = u_old + gamma * sigma + K * delta_x
-            # NOTA: u_old è uu[:,tt], sigma è il feedforward, K è il feedback
+            # NOTE: u_old è uu[:,tt], sigma is the feedforward, K is the feedback
             ff_term = gamma * sigma[:, tt]
             fb_term = KK[:, :, tt] @ delta_x
         
             uu_temp[:, tt] = uu[:, tt] + ff_term + fb_term
 
-            # dynamics_euler restituisce [x_next, A, B], prendiamo solo [0]
+            # dynamics_euler gives [x_next, A, B], we take only [0]
             xx_temp[:, tt+1] = dyn.dynamics_euler(xx_temp[:, tt], uu_temp[:, tt])[0]
 
-            # stage_cost restituisce [costo, grad_x, grad_u], prendiamo solo [0]
+            # stage_cost gives [cost, grad_x, grad_u], we take only [0]
             step_c = cst.stage_cost(xx_temp[:, tt], uu_temp[:, tt], xx_ref[:, tt], uu_ref[:, tt])[0]
             cost_temp += step_c
         
-        # Calcoliamo il costo finale sullo stato finale raggiunto
+        # We compute final cost on the reached final state
         term_c = cst.termcost(xx_temp[:, -1], xx_ref[:, -1], QQ)[0]
         cost_temp += term_c
         if cost_temp >= cost_current  + cc*gamma*slope:
@@ -154,12 +154,12 @@ for kk in range(max_iters):
 
 
 # --- PLOTTING RESULTS ---
-# Creiamo un vettore tempo coerente con le dimensioni
+# We create a time vector which is coherent with the dimensions
 time_axis = np.linspace(0, tf, TT)
 
 plt.figure(figsize=(12, 10))
 
-# --- 1. Primo Stato (x1 - Theta 1) ---
+# --- 1. First State (x1 - Theta 1) ---
 plt.subplot(3, 1, 1)
 plt.plot(time_axis, np.rad2deg(xx_ref[0, :]), 'k--', linewidth=2, label=r'$\theta_{1,ref}$ (Desiderata)')
 plt.plot(time_axis, np.rad2deg(xx[0, :]), 'b-', linewidth=2, label=r'$\theta_{1,opt}$ (Ottima)')
@@ -168,8 +168,8 @@ plt.title('Confronto Traiettorie: Riferimento vs Ottimo')
 plt.grid(True)
 plt.legend(loc='best')
 
-# --- 2. Secondo Stato (x2 - Theta 2 o Velocità) ---
-# Nota: Se il tuo sistema ha 2 stati (es. pos e vel, o theta1 e theta2), plottiamo il secondo.
+# --- 2. Second State (x2 - Theta 2 or Angular Velocity) ---
+# NOTE: If your system has 2 states (es. pos and vel, or theta1 and theta2), we plot the second one.
 if ns > 1:
     plt.subplot(3, 1, 2)
     # Se il secondo stato è una velocità, lasciamo rad/s, se è un angolo convertiamo.

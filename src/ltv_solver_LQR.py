@@ -75,11 +75,11 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
   if lB < TT:                       
     BBin = BBin.repeat(TT, axis=2) 
   if lQ < TT:
-    QQin = QQin.repeat(TT, axis=2)  #ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
+    QQin = QQin.repeat(TT, axis=2)  #DA ELIMINARE: ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
   if lR < TT:
-    RRin = RRin.repeat(TT, axis=2)  #ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
+    RRin = RRin.repeat(TT, axis=2)  #DA ELIMINARE: ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
   if lS < TT:
-    SSin = SSin.repeat(TT, axis=2)  #ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
+    SSin = SSin.repeat(TT, axis=2)  #DA ELIMINARE: ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
 
   # Inizialization of the matrices
   KK = np.zeros((ni, ns, TT))
@@ -146,7 +146,7 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
     PPtp = PP[:,:,tt+1]
     pptp = pp[:,tt+1][:,None]
 
-    # Check positive definiteness  CHIARIMENTI
+    # Check positive definiteness -> CHIARIMENTI
 
     MMt_inv = np.linalg.inv(RRt + BBt.T @ PPtp @ BBt)
     mmt = rrt + BBt.T @ pptp
