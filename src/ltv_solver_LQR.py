@@ -69,17 +69,17 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
     print("Matrix S does not match number of inputs")
     exit()
 
-
+  # it repeats TT times the matrix such that it becomes TT-dimensional in the third dimension IF it isn't
   if lA < TT:
     AAin = AAin.repeat(TT, axis=2) 
   if lB < TT:                       
     BBin = BBin.repeat(TT, axis=2) 
   if lQ < TT:
-    QQin = QQin.repeat(TT, axis=2)  #DA ELIMINARE: ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
+    QQin = QQin.repeat(TT, axis=2)  
   if lR < TT:
-    RRin = RRin.repeat(TT, axis=2)  #DA ELIMINARE: ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
+    RRin = RRin.repeat(TT, axis=2)  
   if lS < TT:
-    SSin = SSin.repeat(TT, axis=2)  #DA ELIMINARE: ripete TT volte la matrice in modo da renderla TT dimensionale nella terza dimensione
+    SSin = SSin.repeat(TT, axis=2) 
 
   # Inizialization of the matrices
   KK = np.zeros((ni, ns, TT))

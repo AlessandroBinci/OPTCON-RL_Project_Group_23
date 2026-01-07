@@ -39,9 +39,9 @@ def stage_cost(xx_t, uu_t, xx_ref_t, uu_ref_t):
         - gradient of l wrt u, at (xx_t,uu_t)
 
     '''
-
+    #Defining the cost
     ll = 0.5*((xx_t - xx_ref_t).T @ QQ @ (xx_t - xx_ref_t)) + 0.5*((uu_t - uu_ref_t).T @ RR @ (uu_t - uu_ref_t))
-
+    #Defining the gradients
     lx = QQ @(xx_t - xx_ref_t)
     lu = RR @(uu_t - uu_ref_t)
 
@@ -63,9 +63,11 @@ def termcost(xxT,xxT_ref, QQT):
         
 
     '''
-
-    llT = 0.5*((xxT - xxT_ref).T @ QQT @ (xxT - xxT_ref))  # cost at (xxT)
-    lTx = QQT @(xxT - xxT_ref)                             # gradient of l_T wrt x, at (xxT)
+    #Defining the cost at (xxT)
+    llT = 0.5*((xxT - xxT_ref).T @ QQT @ (xxT - xxT_ref))  
+    
+    #Defining the gradient l_T wrt x, at (xxT)
+    lTx = QQT @(xxT - xxT_ref)                             
 
     return llT.squeeze(), lTx
 
