@@ -2,3 +2,6 @@
 #2 Chiarimenti su .squeeze
 #3 riga 151-152 sul file Solver (riguardo il chacking the definita positività delle matrici)
 #4 Numero max di terazioni = 500 in equilibrium.py
+#5 Consiglio per task 2: simplfied kinematic model cosa si intende
+#6 Discorso trapezoidal
+#7 Range di variazione matrice Q ed R - come impostare i valori

@@ -5,6 +5,8 @@
 import numpy as np
 import sympy as sy
 import math
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 import dynamics as dyn
 
@@ -77,56 +79,51 @@ def trapezoidal(ns,ni,th1, tau_init, th1_final):
     # Constant velocity: v = (3*L)/(2*T) -> 1.5 * L / T, L is the displacement and T is the period
 
     vel_c_xx = (1.5 * L_xx) / (TT_trap * dt)
-    vel_c_uu = (1.5 * L_uu) / (TT_trap * dt)
+    #vel_c_uu = (1.5 * L_uu) / (TT_trap * dt) probabilmente inutile
 
     # Max acceleration: a = (9*L)/(2*T^2) -> 4.5 * L / T^2, L is the displacement and T is the period
     acc_max_xx = (4.5 * L_xx) / ((TT_trap * dt)**2)
     acc_max_uu = (4.5 * L_uu) / ((TT_trap * dt)**2)
 
-    for k in range(ns):
+    # Time instants where the trajectory changes (1/3 and 2/3 of TT_trap)
+    t1_change = int(TT_trap/3)
+    t2_change = int(TT_trap * 2/3)
 
-        for tt in range(TT_trap):
 
-            if tt<=(TT_trap/3):
-                xx_ref[k,tt] = xx_init[k] + 0.5*acc_c[k]*((tt*dt)^2)
+    # Values of position and input at the end of the first part. We'll use them as initial points for the second part
+    t1_sec = t1_change * dt
+    xx_t1 = xx_init[0:2] + 0.5 * acc_max_xx * (t1_sec**2)
+    uu_t1 = uu_init + 0.5 * acc_max_uu * (t1_sec**2)
 
-            if tt > (TT_trap*(2/3)):
-                xx_ref[k,tt] = xx_final[k] - 0.5*acc_c[k]*(((TT_trap-tt)*dt)^2)
+   
+    for tt in range(TT_trap):
+
+        if tt<=(t1_change):
+
+            xx_ref[0:2,tt] = xx_init[0:2] + 0.5*acc_max_xx[0:2]*((tt*dt)**2)
+            uu_ref[:,tt] = uu_init + 0.5*acc_max_uu*((tt*dt)**2)
+            xx_ref[2:4,tt] = acc_max_xx * (tt*dt)
+
+        elif tt > (t2_change):
+
+            xx_ref[0:2,tt] = xx_final[0:2] - 0.5*acc_max_xx[0:2]*(((TT_trap-tt)*dt)**2)
+            uu_ref[:,tt] = uu_final - 0.5*acc_max_uu*(((TT_trap-tt)*dt)**2)
+            xx_ref[2:4,tt] = acc_max_xx * ((TT_trap-tt)*dt)
                 
-            else:
-                xx_ref[k,tt] = xx_init[k] + acc_c[k]* ((TT_trap/3)*dt)* ((tt-((TT_trap/3)/2))*dt) 
+        else:
+            xx_ref[0:2,tt] = xx_t1 + acc_max_xx[0:2]* ((t1_change)*dt)* ((tt-t1_change)*dt) 
+            uu_ref[:,tt] = uu_t1 + acc_max_uu* ((t1_change)*dt)* ((tt-t1_change)*dt)
+            xx_ref[2:4,tt] = vel_c_xx
 
-    for k in range(ni):
-
-        for tt in range(TT_trap):
-
-            if tt<=(TT_trap/3):
-                uu_ref[k,tt] = uu_init[k] + 0.5*acc_c[k]*((tt*dt)^2)
-
-            if tt > (TT_trap*(2/3)):
-                uu_ref[k,tt] = uu_final[k] - 0.5*acc_c[k]*(((TT_trap-tt)*dt)^2)
-                
-            else: 
-                uu_ref[k,tt] = uu_init[k] + acc_c[k]* ((TT_trap/3)*dt)* ((tt-((TT_trap/3)/2))*dt)        
-     
 
     return xx_ref , uu_ref
-
-
-
-
-
-
-
 
 
 
 def gen_smooth(tf, dt, ns, ni, th1, tau_init, th1_final):
 
     # Total number of steps
-    TT = int(tf/dt) 
-
-  
+    TT = int(tf/dt)
 
     # Initializing the reference curve
     xx_ref = np.zeros((ns, TT))
@@ -135,5 +132,37 @@ def gen_smooth(tf, dt, ns, ni, th1, tau_init, th1_final):
     # Importing equilibrium points
     xx_eq1, xx_eq2, uu_eq1, uu_eq2 = eq.eq_gen(th1, tau_init, th1_final)
 
+    # Importing trapezoidal trajectory
+    xx_trap_ref,uu_trap_ref = trapezoidal(ns,ni,th1, tau_init, th1_final)
 
+    
+    for tt in range(TT):
 
+        # Defining the first part of the reference trajectory (constant at equilibrium one) 
+        if tt < T_init:
+
+            for k in range(ns):
+                xx_ref[k,tt] = xx_eq1[k]
+
+            for k in range(ni):
+                uu_ref[k,tt] = uu_eq1[k]
+
+        # Defining the last part of the reference trajectory (constant at equilibrium two)
+        elif tt >= T_end:
+
+            for k in range(ns):
+                xx_ref[k,tt] = xx_eq2[k]
+
+            for k in range(ni):
+                uu_ref[k,tt] = uu_eq2[k]
+
+        # Defining trapezoidal part        
+        else:
+            for k in range(ns):
+                xx_ref[k,tt] = xx_trap_ref[k,tt-T_init] # 'tt-T_init' used to scale the index of xx_trap_ref
+
+            for k in range(ni):
+                uu_ref[k,tt] = uu_trap_ref[k,tt-T_init] # 'tt-T_init' used to scale the index of uu_trap_ref
+    
+    return xx_ref, uu_ref
+                
