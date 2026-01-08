@@ -12,6 +12,15 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 src_path = os.path.join(current_dir, 'src')
 # Add 'src' folder tho the paths where Python search the modules
 sys.path.append(src_path)
+# Add 'docs/Task2' folder path to store the images
+output_folder = os.path.join(current_dir, 'images', 'Task2')
+# If the folder does not exists, create one
+if not os.path.exists(output_folder):
+    print(f"La cartella non esisteva, la sto creando qui: {output_folder}")
+    os.makedirs(output_folder)
+else:
+    print(f"Salvataggio immagini in: {output_folder}")
+
 
 ### --- IMPORTS --- ###
 import numpy as np
@@ -317,7 +326,7 @@ plt.legend(loc='best')
 plt.tight_layout()
 
 # Salva l'immagine per il report (opzionale, rimuovi se non vuoi salvare)
-plt.savefig('Task1_Optimal_vs_Desired.png', dpi=300)
+plt.savefig(os.path.join(output_folder,'Task2_Optimal_vs_Desired.png'), dpi=300)
 
 # Mostra a video
 plt.show()
@@ -350,7 +359,7 @@ plt.grid(True)
 plt.legend(loc='best')
 
 plt.tight_layout()
-plt.savefig('Task1_Velocities.png', dpi=300) # Salva per il report
+plt.savefig(os.path.join(output_folder,'Task2_Velocities.png'), dpi=300) # Salva per il report
 plt.show()
 
 
@@ -444,7 +453,7 @@ plt.xlabel('Time [s]')
 plt.grid(True)
 
 plt.tight_layout()
-plt.savefig('Task1_Evolution_Pos_Input_ManualColors.png', dpi=300)
+plt.savefig(os.path.join(output_folder,'Task2_Evolution_Pos_Input_ManualColors.png'), dpi=300)
 plt.show()
 
 
@@ -484,7 +493,7 @@ plt.xlabel('Time [s]')
 plt.grid(True)
 
 plt.tight_layout()
-plt.savefig('Task1_Evolution_Velocities_ManualColors.png', dpi=300)
+plt.savefig(os.path.join(output_folder,'Task2_Evolution_Velocities_ManualColors.png'), dpi=300)
 plt.show()
 
 # --- PLOT: Armijo Line Search (Updated with Tested Steps) ---
@@ -528,7 +537,7 @@ if len(global_armijo_data) > 0:
              # Cerchiamo di centrare la vista sulla zona interessante (bassi gamma)
              plt.ylim(min(real_costs) * 0.9, acc_c * 3.0) 
 
-        plt.savefig(f'Task1_Armijo_LineSearch_Iter_{iter_idx}.png', dpi=300)
+        plt.savefig(os.path.join(output_folder,f'Task2_Armijo_LineSearch_Iter_{iter_idx}.png'), dpi=300)
         plt.show()
 
 # --- PLOT: Norm of the Descent Direction (Semi-Log Scale) ---
@@ -568,7 +577,7 @@ if len(dx_history) > 0 and len(du_history) > 0:
     plt.legend(loc='best')
     
     # Salvataggio
-    plt.savefig('Task1_Descent_Direction_Norm.png', dpi=300)
+    plt.savefig(os.path.join(output_folder,'Task2_Descent_Direction_Norm.png'), dpi=300)
     plt.show()
 
 else:
@@ -597,7 +606,7 @@ if len(cost_history) > 0:
     plt.grid(True, which="minor", linestyle=':', linewidth=0.5)
 
     plt.tight_layout()
-    plt.savefig('Task1_Cost_LogScale.png', dpi=300)
+    plt.savefig(os.path.join(output_folder,'Task2_Cost_LogScale.png'), dpi=300)
     plt.show()
 else:
     print("Nessun storico dei costi salvato.")
