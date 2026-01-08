@@ -16,10 +16,10 @@ sys.path.append(src_path)
 output_folder = os.path.join(current_dir, 'images', 'Task2')
 # If the folder does not exists, create one
 if not os.path.exists(output_folder):
-    print(f"La cartella non esisteva, la sto creando qui: {output_folder}")
+    print(f"The folder didn't exist, creating folder here:{output_folder}")
     os.makedirs(output_folder)
 else:
-    print(f"Salvataggio immagini in: {output_folder}")
+    print(f"Store images in: {output_folder}")
 
 
 ### --- IMPORTS --- ###
@@ -148,7 +148,7 @@ for kk in range(max_iters):
     # ---------------------------------------------------------
     # Starting generating data for Armijo plot (Line Search)
     # ---------------------------------------------------------
-    iters_to_debug = [0, 1, 5] # iteration samples of which we'll plot armijo
+    iters_to_debug = [0, 1, 2, 5] # iteration samples of which we'll plot armijo
     armijo_data_iter = {}  # dictionary to store iterations' data
 
     # Computing Line Search curve (Feedback) only for iteration {kk} equal to 0,1,5
@@ -280,78 +280,77 @@ for kk in range(max_iters):
 xx_history.append(xx.copy())
 uu_history.append(uu.copy())
 
-# --- PLOT 1: Optimal Trajectory vs Desired Curve ---
-# Requisito Assignment: "Optimal trajectory and desired curve"
+# --- PLOT: Optimal Trajectory vs Desired Curve ---
+# Requirement: "Optimal trajectory and desired curve"
 
-# 1. Definizione dell'asse temporale
-# Assumiamo che tf e TT siano definiti nel tuo main
+# Temporal axis definition
+# We assume that 'tf' and 'TT' are defined in our main
 time_axis = np.linspace(0, tf, TT)
 
-# 2. Creazione della figura
+# Figure creation
 plt.figure(figsize=(10, 8))
 
-# --- Subplot 1: Primo Stato (Theta 1) ---
+# --- Subplot 1: First State (Theta 1) ---
 plt.subplot(3, 1, 1)
-# Desired (Riferimento) - Linea tratteggiata nera
+# Desired traj. - Black Dashed Line
 plt.plot(time_axis, xx_ref[0, :], 'k--', linewidth=2, label=r'$\theta_{1,des}$ (Desired)')
-# Optimal (Ottima) - Linea solida colorata
+# Optimal traj. - Solid Colored Line
 plt.plot(time_axis, xx[0, :], 'b-', linewidth=2, label=r'$\theta_{1,opt}$ (Optimal)')
 plt.ylabel(r'$\theta_1$ [rad]')
 plt.title('Optimal Trajectory vs Desired Curve')
 plt.grid(True)
 plt.legend(loc='best')
 
-# --- Subplot 2: Secondo Stato (Theta 2) ---
+# --- Subplot 2: Second State (Theta 2) ---
 plt.subplot(3, 1, 2)
-# Desired
+# Desired traj.
 plt.plot(time_axis, xx_ref[1, :], 'k--', linewidth=2, label=r'$\theta_{2,des}$ (Desired)')
-# Optimal
+# Optimal traj.
 plt.plot(time_axis, xx[1, :], 'r-', linewidth=2, label=r'$\theta_{2,opt}$ (Optimal)')
 plt.ylabel(r'$\theta_2$ [rad]')
 plt.grid(True)
 plt.legend(loc='best')
 
-# --- Subplot 3: Input (Coppia) ---
+# --- Subplot 3: Input ---
 plt.subplot(3, 1, 3)
-# Desired
+# Desired traj.
 plt.plot(time_axis, uu_ref[0, :], 'k--', linewidth=2, label=r'$u_{des}$ (Desired)')
-# Optimal
+# Optimal traj.
 plt.plot(time_axis, uu[0, :], 'g-', linewidth=2, label=r'$u_{opt}$ (Optimal)')
 plt.ylabel(r'Torque [Nm]')
 plt.xlabel(r'Time [s]')
 plt.grid(True)
 plt.legend(loc='best')
 
-# Ottimizzazione spazi e salvataggio
+# Optimization of the spaces and storage
 plt.tight_layout()
 
-# Salva l'immagine per il report (opzionale, rimuovi se non vuoi salvare)
+# Save the image in the correct folder
 plt.savefig(os.path.join(output_folder,'Task2_Optimal_vs_Desired.png'), dpi=300)
-
-# Mostra a video
+# Print on screen
 plt.show()
 
 # --- PLOT 1-bis: Optimal Velocities vs Desired (Zero) ---
-# Visualizzazione degli stati x3 (Velocità Theta 1) e x4 (Velocità Theta 2)
+# Visualization of the states x3 (Velocity Theta 1) and x4 (Velocity Theta 2)
 
 plt.figure(figsize=(10, 8))
 
-# --- Subplot 1: Terzo Stato (x3 - Velocità Theta 1) ---
+# --- Subplot 1: Third State (x3 - Velocity Theta 1) ---
 plt.subplot(2, 1, 1)
-# Desired (Riferimento) - Solitamente zero
+# Desired traj. (generally zero)
 plt.plot(time_axis, xx_ref[2, :], 'k--', linewidth=2, label=r'$\dot{\theta}_{1,des}$ (Desired)')
-# Optimal (Ottima)
+# Optimal traj.
 plt.plot(time_axis, xx[2, :], 'b-', linewidth=2, label=r'$\dot{\theta}_{1,opt}$ (Optimal)')
 plt.ylabel(r'$\dot{\theta}_1$ [rad/s]')
 plt.title('Optimal Velocities vs Desired')
 plt.grid(True)
 plt.legend(loc='best')
 
-# --- Subplot 2: Quarto Stato (x4 - Velocità Theta 2) ---
+# --- Subplot 2: Fourth State (x4 - Velocity Theta 2) ---
 plt.subplot(2, 1, 2)
-# Desired (Riferimento) - Solitamente zero
+# Desired traj. (generally zero)
 plt.plot(time_axis, xx_ref[3, :], 'k--', linewidth=2, label=r'$\dot{\theta}_{2,des}$ (Desired)')
-# Optimal (Ottima)
+# Optimal traj.
 plt.plot(time_axis, xx[3, :], 'r-', linewidth=2, label=r'$\dot{\theta}_{2,opt}$ (Optimal)')
 plt.ylabel(r'$\dot{\theta}_2$ [rad/s]')
 plt.xlabel(r'Time [s]')
@@ -363,10 +362,10 @@ plt.savefig(os.path.join(output_folder,'Task2_Velocities.png'), dpi=300) # Salva
 plt.show()
 
 
-# 1. Define time axis
+# Define time axis
 time_axis = np.linspace(0, tf, TT)
 
-# 2. Select specific iterations to plot: [0, 17, 34, Final]
+# Select specific iterations to plot: [0, 1, 2, Final]
 total_iters = len(xx_history)
 desired_indices = [0, 1, 2, total_iters - 1]
 
@@ -379,31 +378,29 @@ for idx in desired_indices:
 
 print(f"Plotting iterations: {indices_to_plot}")
 
-# 3. Retrieve trajectory data
+# Retrieve trajectory data
 xx_plot_list = [xx_history[i] for i in indices_to_plot]
 uu_plot_list = [uu_history[i] for i in indices_to_plot]
 num_plots = len(indices_to_plot)
 
-# --- 4. MANUAL COLOR MANAGEMENT ---
-# Qui definisci manualmente il colore per ogni curva che verrà plottata.
-# L'ordine corrisponde a: [Iter 0, Iter 1, Iter 2, Finale]
-# Puoi usare nomi ('red', 'blue', 'grey') o Hex Code ('#FFA500')
+# --- MANUAL COLOR MANAGEMENT ---
+# Here we can define manually the color for each curve which will be plotted.
+# The order corresponds to: [Iter 0, Iter 1, Iter 2, Finale] 
+# The following names can be used: ('red', 'blue', 'grey')
 
 custom_colors = [
-    'tab:orange',    # Iter 0 (Initial Guess) - Grigio per non distrarre
-    'tab:blue',  # Iter 1 - Viola per contrasto
-    'tab:green',  # Iter 2 - Arancione per transizione
-    'tab:red'     # Final (Optimal) - Blu (Coerente col Plot 1)
+    'tab:orange',    # Iter 0 (Initial Guess)
+    'tab:blue',  # Iter 1
+    'tab:green',  # Iter 2
+    'tab:red'     # Final (Optimal)
 ]
 
-# Sicurezza: se per caso hai meno iterazioni, tronchiamo la lista colori
+# Safety: in the case we have less iterations, we truncate the color list
 if len(custom_colors) > num_plots:
     current_colors = custom_colors[:num_plots]
 else:
-    # Se ne mancano, ripetiamo l'ultimo (caso raro)
+    # If there are no iterations, we repeat the last one
     current_colors = custom_colors + [custom_colors[-1]]*(num_plots-len(custom_colors))
-
-# Se vuoi l'ottima finale in Rosso invece che Blu, cambia l'ultimo elemento della lista sopra.
 
 LW = 1.5 # Line Width
 
@@ -412,7 +409,7 @@ plt.figure(figsize=(12, 10))
 
 # Subplot 1: Theta 1 Evolution
 plt.subplot(3, 1, 1)
-# Reference (Nero tratteggiato)
+# Reference (Dashed Black)
 plt.plot(time_axis, xx_ref[0, :], 'k--', linewidth=LW, label=r'$\theta_{1,des}$ (Reference)')
 
 for k, idx in enumerate(indices_to_plot):
@@ -497,6 +494,7 @@ plt.savefig(os.path.join(output_folder,'Task2_Evolution_Velocities_ManualColors.
 plt.show()
 
 # --- PLOT: Armijo Line Search (Updated with Tested Steps) ---
+# Requirement: "Armijo Line Search"
 
 if len(global_armijo_data) > 0:
     for data in global_armijo_data:
@@ -508,23 +506,23 @@ if len(global_armijo_data) > 0:
         acc_g = data['accepted_gamma']
         acc_c = data['accepted_cost']
         
-        # Recuperiamo i punti testati (Arancioni)
+        # Recover tested points (the orange ones)
         tested_g = data.get('tested_gammas', [])
         tested_c = data.get('tested_costs', [])
         
         plt.figure(figsize=(10, 6))
         
-        # 1. Curve
+        # 1. Curves
         plt.plot(gammas, real_costs, 'g-', linewidth=2, label='Real Cost (Closed Loop)')
         plt.plot(gammas, lines, 'g--', alpha=0.6, label='Armijo Threshold')
         
-        # 2. Punti Testati (Orange Scatter) - Come nel file homework
+        # 2. Tested Points (Orange Scatter)
         if len(tested_g) > 0:
             plt.scatter(tested_g, tested_c, color='orange', s=50, zorder=5, label='Tested Steps')
         
-        # 3. Punto Accettato (Red Scatter)
+        # 3. Accepted Point (Red Scatter)
         if acc_g is not None:
-            plt.scatter(acc_g, acc_c, color='red', s=100, zorder=6, label=f'Accepted $\gamma={acc_g:.4f}$')
+            plt.scatter(acc_g, acc_c, color='red', s=100, zorder=6, label=fr'Accepted $\gamma={acc_g:.4f}$')
             
         plt.title(f'Newton Descent with Armijo (Iter {iter_idx})')
         plt.xlabel(r'Step Size $\gamma$')
@@ -532,16 +530,16 @@ if len(global_armijo_data) > 0:
         plt.grid(True)
         plt.legend(loc='best')
         
-        # Zoom intelligente se i costi sono molto alti all'inizio
+        # Zoom if costs are very high at the beginning
         if acc_c is not None:
-             # Cerchiamo di centrare la vista sulla zona interessante (bassi gamma)
+             # Center the view in the interested zone (low gamma)
              plt.ylim(min(real_costs) * 0.9, acc_c * 3.0) 
 
         plt.savefig(os.path.join(output_folder,f'Task2_Armijo_LineSearch_Iter_{iter_idx}.png'), dpi=300)
         plt.show()
 
 # --- PLOT: Norm of the Descent Direction (Semi-Log Scale) ---
-# Requisito: "Norm of the descent direction along iterations (semi-logarithmic scale)"
+# Requirement: "Norm of the descent direction along iterations (semi-logarithmic scale)"
 
 if len(dx_history) > 0 and len(du_history) > 0:
     
@@ -553,8 +551,8 @@ if len(dx_history) > 0 and len(du_history) > 0:
         dx_traj = dx_history[i] # Matrice (ns x TT)
         du_traj = du_history[i] # Matrice (ni x TT)
         
-        # Uniamo tutto in un unico vettore gigante per calcolare la "norma della perturbazione" totale
-        # Usiamo la norma L2 (Euclidea) di tutti i valori appiattiti
+        # Combine in one single vector to compute the "norm of the total perturbation"
+        # Use the norm L2 (Euclidian) of all flattened values 
         # Norm = sqrt( sum(dx^2) + sum(du^2) )
         vector_dx = dx_traj.flatten()
         vector_du = du_traj.flatten()
@@ -564,19 +562,18 @@ if len(dx_history) > 0 and len(du_history) > 0:
         descent_norms.append(total_norm)
         iterations.append(i)
 
-    # Creazione del plot
+    # Creation of the plot
     plt.figure(figsize=(10, 6))
     
-    # Plot semi-logaritmico (asse Y logaritmico)
+    # Semi-logaritmic plot (logaritmic Y axis)
     plt.semilogy(iterations, descent_norms, 'bo-', linewidth=2, markersize=6, label=r'$||\Delta z||$ (Descent Direction)')
     
     plt.title('Norm of Descent Direction along Iterations')
     plt.xlabel('Iteration $k$')
     plt.ylabel(r'Norm $||\Delta z^k|| = \sqrt{||\Delta x^k||^2 + ||\Delta u^k||^2}$')
-    plt.grid(True, which="both", ls="--", alpha=0.6) # Griglia specifica per log plot
+    plt.grid(True, which="both", ls="--", alpha=0.6) # Specific grid for log plot
     plt.legend(loc='best')
     
-    # Salvataggio
     plt.savefig(os.path.join(output_folder,'Task2_Descent_Direction_Norm.png'), dpi=300)
     plt.show()
 
@@ -585,14 +582,13 @@ else:
 
 
 # --- PLOT: Cost along iterations (semi-logarithmic scale) ---
-# Requisito: "Cost along iterations (semi-logarithmic scale)"
+# Requirement: "Cost along iterations (semi-logarithmic scale)"
 
 if len(cost_history) > 0:
     plt.figure(figsize=(10, 8))
     
-    # Uso semilogy per la scala logaritmica su Y
-    # 'c' è il colore ciano/teal simile all'immagine
-    # marker='o' per i pallini
+    # Using of 'semilogy' for the logaritmic scale on Y
+    # marker='o' for the dots on the plot
     plt.semilogy(range(len(cost_history)), cost_history, 
                  color='tab:cyan', marker='o', linestyle='-', 
                  linewidth=2, markersize=8)
@@ -601,7 +597,7 @@ if len(cost_history) > 0:
     plt.xlabel("Iteration", fontsize=14)
     plt.ylabel("Cost", fontsize=14)
     
-    # Griglia specifica per log plot (sia major che minor lines)
+    # Specific grif for log plot (both for major and minor lines)
     plt.grid(True, which="major", linestyle='-', linewidth=0.8)
     plt.grid(True, which="minor", linestyle=':', linewidth=0.5)
 
@@ -609,4 +605,4 @@ if len(cost_history) > 0:
     plt.savefig(os.path.join(output_folder,'Task2_Cost_LogScale.png'), dpi=300)
     plt.show()
 else:
-    print("Nessun storico dei costi salvato.")
+    print("No stored history of the costs.")
