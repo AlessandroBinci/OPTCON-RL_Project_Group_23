@@ -547,49 +547,39 @@ if len(global_armijo_data) > 0:
         plt.grid(True)
         plt.legend(loc='best')
         
-        # --- ZOOM INTELLIGENTE (Versione Tangenza Visibile) ---
+        # --- Zoom to see the tangent line ---
         
-        # 1. Determiniamo i limiti basandoci SOLO sulla curva di Costo Reale
-        #    Ignoriamo quanto in basso scende la tangente rossa per gamma grandi.
-        #    Consideriamo tutti i costi calcolati + il costo iniziale.
+        # Determining the plot bounds using only the real cost curve
         valid_costs = list(real_costs)
         valid_costs.append(cost_current)
         
-        # Filtriamo eventuali valori nan o inf per sicurezza
+        # Filtering possible values as NaN o inf 
         valid_costs = [c for c in valid_costs if np.isfinite(c)]
         
         if len(valid_costs) > 0:
             y_data_min = min(valid_costs)
             y_data_max = max(valid_costs)
             
-            # Calcoliamo l'escursione dei costi reali
+            # Computing the range variation of real cost values
             y_span = y_data_max - y_data_min
-            if y_span == 0: y_span = 1.0 # Evita crash su grafici piatti
+            if y_span == 0: y_span = 1.0 # to avoid crashes on flatten plots
             
-            # 2. Impostiamo i margini
-            #    - Margine INFERIORE: 10% dello span (per non toccare il fondo)
-            #    - Margine SUPERIORE: 20% dello span (più ampio, per vedere bene la tangenza in alto)
+            # Defining margins
+            #    - Lower margin: 10% of range variation (so it doesn't touch the ground)
+            #    - Upper margin: 20% of range variation (so it's wider, to see better the tangent line)
             margin_bottom = 0.1 * y_span
             margin_top = 0.2 * y_span
             
-            # Se il punto accettato è molto basso (più del minimo testato), allarghiamo sotto
+            # If we accept a point that is very low (lower than the tested minimum), we enlarge the space at the end
             if acc_c is not None and acc_c < y_data_min:
                 y_data_min = acc_c
             
-            # Impostiamo i limiti Y
-            # In questo modo la tangente rossa sarà visibile all'inizio (tangenza) 
-            # e poi verrà "tagliata" quando scende troppo, lasciando il focus sulla parabola verde.
+            # Defining bounds for Y
             plt.ylim(y_data_min - margin_bottom, y_data_max + margin_top)
             
-            # 3. Impostiamo i limiti X
-            #    Partiamo leggermente prima di 0 (-0.05) per vedere bene l'asse Y e l'intercetta
+            # Defining bounds for X
             max_x = max(gammas) if len(gammas) > 0 else 1.2
-            plt.xlim(-0.05, max_x * 1.05)
-        # Zoom if costs are very high at the beginning
-        #if acc_c is not None:
-             
-             # Center the view in the interested zone (low gamma)
-             #plt.ylim(min(real_costs) * 0.9, acc_c * 3.0) 
+            plt.xlim(-0.05, max_x * 1.05)   # We start a little bit earlier than the 0 (i.e. -0.05) to better see y-axis and the intercept line
 
         plt.savefig(os.path.join(output_folder,f'Task1_Armijo_LineSearch_Iter_{iter_idx}.png'), dpi=300)
         plt.show()
