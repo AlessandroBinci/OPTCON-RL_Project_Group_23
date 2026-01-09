@@ -1,7 +1,9 @@
 #1 Chiedere se sarebbe meglio implementare altri metodi di discretizzazione per la task 0 (es. Runge-Kutta)
-#2 Chiarimenti su .squeeze
+#2 symbols file dynamics.py riga 28 e chiarimenti su .squeeze
 #3 riga 151-152 sul file Solver (riguardo il chacking the definita positività delle matrici)
 #4 Numero max di terazioni = 500 in equilibrium.py
 #5 Consiglio per task 2: simplfied kinematic model cosa si intende
 #6 Discorso trapezoidal(va bene o serve spline)
 #7 Range di variazione matrice Q ed R - come impostare i valori
+#8 chiedere come impostare task 3 e 4
+#9 Ale chiede di GitHub
