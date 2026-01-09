@@ -12,6 +12,7 @@ THINGS TO DO:
 - Provare a dare Input a gradino per vedere se ha meno oscillazioni
 - Nella descent direction si potrebbe fare anche solo delta U
 - Provare ad aumentare il periodo della trajectory (quella di 10s) oppure diminuire il periodo della trapezoidal
+- Sistemare grafico norm of descent direction 
 
 - TASK 3:
 
