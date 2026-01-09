@@ -1,21 +1,19 @@
-#1 Chiedere se sarebbe meglio implementare altri metodi di discretizzazione per la task 0 (es. Runge-Kutta) --> PROVA USARE CASADY
+NOTE:
+- symbols file dynamics.py riga 28 e chiarimenti su .squeeze--> SOLO PER COMPATIBILITà CON NUMPY
+- Numero max di iterazioni = 500 in equilibrium.py-->SOLO VALORE DI SOGLIA (se è alto non fa nulla, se si sfora vuol dire che qualcosa non va)
+- 10 iterazioni ARMIJO vanno bene
+- Report: no codice. Vuole il ragionamento con la immagini SOLO scelte progettuali. Sintetico e chiaro
 
-#2 symbols file dynamics.py riga 28 e chiarimenti su .squeeze--> SOLO PER COMPATIBILITà CON NUMPY
+THINGS TO DO:
 
-#3 riga 151-152 sul file Solver (riguardo il checking the definita positività delle matrici)-->OK, NON CHECKA REALMENTE LA POSITIVITà
-PROBABILMENTE è SOLO UN DEBUG AGGIUNTIVO CHE SI PUò FARE SE NON TORNA
+- OPZIONALE: Rounge Kutta implementato con CASADY
 
-#4 Numero max di terazioni = 500 in equilibrium.py-->SOLO VALORE DI SOGLIA (se è alto non fa nulla, se si sfora vuol dire che qualcosa non va)
+- Trial & Error con Q e R (con ragionamento sul tuning)
+- Provare a dare Input a gradino per vedere se ha meno oscillazioni
+- Nella descent direction si potrebbe fare anche solo delta U
+- Provare ad aumentare il periodo della trajectory (quella di 10s) oppure diminuire il periodo della trapezoidal
 
-#5 Consiglio per task 2: simplfied kinematic model cosa si intende
-
-#6 Discorso trapezoidal(va bene o serve spline)--> LA TRAPEZOIDAL VA BENE
-
-#7 Range di variazione matrice Q ed R - come impostare i valori-->DEVE ESSERCI UN RAGIONAMENTO SUL TUNING DEI PARAMETRI (trial&error)
-SI PUò PROVARE A DARE UN INPUT A GRADINO DATO CHE è POCO PESATO (importante è motivare le scelte)
-
-#8 chiedere come impostare task 3 e 4-->
-TASK 3:
+- TASK 3:
 
 Linearizzare rispetto alla traiettoria 
 
@@ -23,20 +21,6 @@ Al posto della reference abbiamo la traiettoria ottima
 Lo implementiamo con un LQR, è come un tracking in tempo REALE ci da la k
 La k la usiamo come feedback che controlli l'errore tra quella simulata e la traiettoria ottima
 
-TASK 4:
+- TASK 4:
 
 Stesso ragionamento usando MPC piuttosto LQR
-
-#9 Ale chiede di GitHub
-
-#10 Giovedì 15 si può fare il secondo incontro--> OK ALLE 11
-
-#11 OK 10 ITERAZIONI ARMIJO
-
-#12 INSERIRE LINEA TANGENTE DI ARMIJO SU ENTRAMBI I GRAFICI (plot come sulle slide)
-
-#13 Nella descent direction si potrebbe fare anche solo delta U
-
-#14 Provare ad aumentare il periodo della trajectory (quella di 10s) oppure diminuire il periodo della trapezoidal
-
-#15 Report: no codice. Vuole il ragionamento con la immagini SOLO scelte progettuali. Sintetico e chiaro
