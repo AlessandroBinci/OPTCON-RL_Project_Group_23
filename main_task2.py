@@ -571,7 +571,7 @@ if len(dx_history) > 0 and len(du_history) > 0:
     plt.title('Norm of Descent Direction along Iterations')
     plt.xlabel('Iteration $k$')
     plt.ylabel(r'Norm $||\Delta z^k|| = \sqrt{||\Delta x^k||^2 + ||\Delta u^k||^2}$')
-    plt.grid(True, which="both", ls="--", alpha=0.6) # Specific grid for log plot
+    plt.grid(True, which="both", axis="both", ls="--", alpha=0.6) # Specific grid for log plot
     plt.legend(loc='best')
     
     plt.savefig(os.path.join(output_folder,'Task2_Descent_Direction_Norm.png'), dpi=300)

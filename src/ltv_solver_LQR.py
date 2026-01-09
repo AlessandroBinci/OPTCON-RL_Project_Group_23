@@ -146,8 +146,6 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
     PPtp = PP[:,:,tt+1]
     pptp = pp[:,tt+1][:,None]
 
-    # Check positive definiteness -> CHIARIMENTI
-
     MMt_inv = np.linalg.inv(RRt + BBt.T @ PPtp @ BBt)
     mmt = rrt + BBt.T @ pptp
 
