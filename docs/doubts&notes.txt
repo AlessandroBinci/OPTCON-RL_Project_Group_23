@@ -1,0 +1,26 @@
+NOTE:
+- symbols file dynamics.py riga 28 e chiarimenti su .squeeze--> SOLO PER COMPATIBILITà CON NUMPY
+- Numero max di iterazioni = 500 in equilibrium.py-->SOLO VALORE DI SOGLIA (se è alto non fa nulla, se si sfora vuol dire che qualcosa non va)
+- 10 iterazioni ARMIJO vanno bene
+- Report: no codice. Vuole il ragionamento con la immagini SOLO scelte progettuali. Sintetico e chiaro
+
+THINGS TO DO:
+
+- OPZIONALE: Rounge Kutta implementato con CASADY
+
+- Trial & Error con Q e R (con ragionamento sul tuning)
+- Provare a dare Input a gradino per vedere se ha meno oscillazioni
+- Nella descent direction si potrebbe fare anche solo delta U
+- Provare ad aumentare il periodo della trajectory (quella di 10s) oppure diminuire il periodo della trapezoidal
+
+- TASK 3:
+
+Linearizzare rispetto alla traiettoria 
+
+Al posto della reference abbiamo la traiettoria ottima
+Lo implementiamo con un LQR, è come un tracking in tempo REALE ci da la k
+La k la usiamo come feedback che controlli l'errore tra quella simulata e la traiettoria ottima
+
+- TASK 4:
+
+Stesso ragionamento usando MPC piuttosto LQR
