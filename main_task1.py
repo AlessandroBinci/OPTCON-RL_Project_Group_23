@@ -161,6 +161,7 @@ for kk in range(max_iters):
         # Initializing lists to store later the real cost and the armijo threshold line
         costs_test = []
         armijo_thresholds = []
+        linear_approximations = []
         
         # Simulating the exact cost that the algorithm would see
         for g_val in gammas_test:
@@ -201,11 +202,18 @@ for kk in range(max_iters):
             thresh = cost_current + cc * g_val * slope 
             armijo_thresholds.append(thresh)
 
+            # Tangent line
+            lin_approx = cost_current + 1.0 * g_val * slope 
+            linear_approximations.append(lin_approx)
+
+            
+
         # Saving curve data
         armijo_data_iter['iter'] = kk
         armijo_data_iter['gammas'] = gammas_test
         armijo_data_iter['real_costs'] = costs_test
         armijo_data_iter['thresholds'] = armijo_thresholds
+        armijo_data_iter['linear_approx'] = linear_approximations
         
         # Placeholder for tested points
         armijo_data_iter['tested_gammas'] = []
@@ -502,6 +510,7 @@ if len(global_armijo_data) > 0:
         gammas = data['gammas']
         real_costs = data['real_costs']
         lines = data['thresholds']
+        tangents = data.get('linear_approx')
         
         acc_g = data['accepted_gamma']
         acc_c = data['accepted_cost']
@@ -512,17 +521,25 @@ if len(global_armijo_data) > 0:
         
         plt.figure(figsize=(10, 6))
         
-        # 1. Curves
+        # 1. Real cost curve
         plt.plot(gammas, real_costs, 'g-', linewidth=2, label='Real Cost (Closed Loop)')
-        plt.plot(gammas, lines, 'g--', alpha=0.6, label='Armijo Threshold')
-        
-        # 2. Tested Points (Orange Scatter)
+
+       # 2. Linear Approximation (Tangent) - Red Dashed
+        if tangents is not None:
+             plt.plot(gammas, tangents, 'r--', linewidth=1.5, label=r'Linear Approx ($\nabla J^T d$)')
+
+        # 3. Armijo Threshold - Green Dashed (Thinner)
+        plt.plot(gammas, lines, 'g-.', linewidth=1, alpha=0.7, label=r'Armijo Threshold ($c \cdot \nabla J^T d$)')
+
+        # 4. Tested Points (Orange Scatter)
         if len(tested_g) > 0:
             plt.scatter(tested_g, tested_c, color='orange', s=50, zorder=5, label='Tested Steps')
         
-        # 3. Accepted Point (Red Scatter)
+        # 5. Accepted Point (Red Scatter)
         if acc_g is not None:
             plt.scatter(acc_g, acc_c, color='red', s=100, zorder=6, label=fr'Accepted $\gamma={acc_g:.4f}$')
+        
+
             
         plt.title(f'Newton Descent with Armijo (Iter {iter_idx})')
         plt.xlabel(r'Step Size $\gamma$')
@@ -530,10 +547,49 @@ if len(global_armijo_data) > 0:
         plt.grid(True)
         plt.legend(loc='best')
         
+        # --- ZOOM INTELLIGENTE (Versione Tangenza Visibile) ---
+        
+        # 1. Determiniamo i limiti basandoci SOLO sulla curva di Costo Reale
+        #    Ignoriamo quanto in basso scende la tangente rossa per gamma grandi.
+        #    Consideriamo tutti i costi calcolati + il costo iniziale.
+        valid_costs = list(real_costs)
+        valid_costs.append(cost_current)
+        
+        # Filtriamo eventuali valori nan o inf per sicurezza
+        valid_costs = [c for c in valid_costs if np.isfinite(c)]
+        
+        if len(valid_costs) > 0:
+            y_data_min = min(valid_costs)
+            y_data_max = max(valid_costs)
+            
+            # Calcoliamo l'escursione dei costi reali
+            y_span = y_data_max - y_data_min
+            if y_span == 0: y_span = 1.0 # Evita crash su grafici piatti
+            
+            # 2. Impostiamo i margini
+            #    - Margine INFERIORE: 10% dello span (per non toccare il fondo)
+            #    - Margine SUPERIORE: 20% dello span (più ampio, per vedere bene la tangenza in alto)
+            margin_bottom = 0.1 * y_span
+            margin_top = 0.2 * y_span
+            
+            # Se il punto accettato è molto basso (più del minimo testato), allarghiamo sotto
+            if acc_c is not None and acc_c < y_data_min:
+                y_data_min = acc_c
+            
+            # Impostiamo i limiti Y
+            # In questo modo la tangente rossa sarà visibile all'inizio (tangenza) 
+            # e poi verrà "tagliata" quando scende troppo, lasciando il focus sulla parabola verde.
+            plt.ylim(y_data_min - margin_bottom, y_data_max + margin_top)
+            
+            # 3. Impostiamo i limiti X
+            #    Partiamo leggermente prima di 0 (-0.05) per vedere bene l'asse Y e l'intercetta
+            max_x = max(gammas) if len(gammas) > 0 else 1.2
+            plt.xlim(-0.05, max_x * 1.05)
         # Zoom if costs are very high at the beginning
-        if acc_c is not None:
+        #if acc_c is not None:
+             
              # Center the view in the interested zone (low gamma)
-             plt.ylim(min(real_costs) * 0.9, acc_c * 3.0) 
+             #plt.ylim(min(real_costs) * 0.9, acc_c * 3.0) 
 
         plt.savefig(os.path.join(output_folder,f'Task1_Armijo_LineSearch_Iter_{iter_idx}.png'), dpi=300)
         plt.show()
