@@ -63,6 +63,27 @@ tau1_des = 0
 
 th1_final = np.deg2rad(90)
 
+
+#--------------- TESTING EQUILIBRIUM POINTS -------------------
+# Checking if the equilibrium points are actually equilibrium points
+# We use the dynamics function (only with the eq. points 1 and 2)...
+# ... to test if in 10 sequential time instants the value of the ... 
+# ... state doesn't change (it remains at the equilibrium)
+
+# xx_eq1, xx_eq2, uu_eq1,uu_eq2 = eq.eq_gen(th1_init, tau1_des, th1_final)
+# for jj in range(10):
+   
+#     xx_try = np.zeros(ns)
+#     uu_try = np.zeros(ni)
+#     xx_atamp = np.zeros((ns,jj))
+#     xx_try = xx_eq2 #change to xx_eq1 to test the eq. point nr.1
+#     uu_try = uu_eq2 #change to uu_eq1 to test the eq. point nr.1
+
+#     xx_atamp = dyn.dynamics_euler(xx_try, uu_try)[0]
+#     print(xx_atamp)
+
+#-------------------------------------------------------------------
+
 # Computing the reference trajectory
 xx_ref, uu_ref = ref_traj.gen_smooth(tf,dt,ns,ni,th1_init,tau1_des,th1_final)
 

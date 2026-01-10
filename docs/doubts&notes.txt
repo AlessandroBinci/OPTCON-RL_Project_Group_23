@@ -6,12 +6,12 @@ NOTE:
 
 THINGS TO DO:
 
-- OPZIONALE: Rounge Kutta implementato con CASADY
+- ❓ OPZIONALE: Runge Kutta implementato con CASADY
 
-- Trial & Error con Q e R (con ragionamento sul tuning)
-- Provare a dare Input a gradino per vedere se ha meno oscillazioni
-- Nella descent direction si potrebbe fare anche solo delta U
-- Provare ad aumentare il periodo della trajectory (quella di 10s) oppure diminuire il periodo della trapezoidal
+- ✅ Trial & Error con Q e R (con ragionamento sul tuning)
+- ✅ Provare a dare Input a gradino per vedere se ha meno oscillazioni (fatto e funziona peggio)
+- Nella descent direction si potrebbe fare anche solo delta U (da implementare se c'è tempo)
+- ✅ Provare ad aumentare il periodo della trajectory (quella di 10s) oppure diminuire il periodo della trapezoidal (fatto e con 20s viene migliore)
 - Sistemare grafico norm of descent direction 
 
 - TASK 3:

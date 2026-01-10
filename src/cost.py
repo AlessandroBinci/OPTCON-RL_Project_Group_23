@@ -16,13 +16,13 @@ ni = dyn.ni
 # Defining cost matrices
 Q1 = 100    # w/ these values, we're giving more weught to the angles tracking
 Q2 = 100
-Q3 = 0.1
-Q4 = 0.1
+Q3 = 1
+Q4 = 1
 
 QQ = np.diag([Q1,Q2,Q3,Q4])
 
 # ni*ni
-RR = np.array([[0.1]])
+RR = np.array([[1]])
 
 def stage_cost(xx_t, uu_t, xx_ref_t, uu_ref_t):
     '''
