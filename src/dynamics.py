@@ -99,10 +99,11 @@ def dynamics_euler(xx,uu):
       - gradient of f wrt u, at xx,uu
   
   """
-    xxp = np.array(f_step_func(xx, uu)).squeeze() # next state vector
+    
+    # Next state vector
+    xxp = np.array(f_step_func(xx, uu)).squeeze() 
 
     # Gradients
-
     dfx = np.array(dfx_func(xx, uu))
     dfu = np.array(dfu_func(xx, uu))
 
