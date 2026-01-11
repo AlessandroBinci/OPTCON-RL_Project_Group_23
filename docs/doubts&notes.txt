@@ -4,15 +4,17 @@ NOTE:
 - 10 iterazioni ARMIJO vanno bene
 - Report: no codice. Vuole il ragionamento con la immagini SOLO scelte progettuali. Sintetico e chiaro
 
-THINGS TO DO:
+RICEVIMENTO 1 -> THINGS TO DO:
 
 - ❓ OPZIONALE: Runge Kutta implementato con CASADY
 
 - ✅ Trial & Error con Q e R (con ragionamento sul tuning)
 - ✅ Provare a dare Input a gradino per vedere se ha meno oscillazioni (fatto e funziona peggio)
-- Nella descent direction si potrebbe fare anche solo delta U (da implementare se c'è tempo)
 - ✅ Provare ad aumentare il periodo della trajectory (quella di 10s) oppure diminuire il periodo della trapezoidal (fatto e con 20s viene migliore)
-- Sistemare grafico norm of descent direction 
+- ✅ Provare a vedere se i punti di equilibrio sono veramente dei punti di equilibrio
+- Nella descent direction si potrebbe fare anche solo delta U (da implementare se c'è tempo):
+    -> scritto nei fogli del tux come si fa e file 7. In pratica dentro al solver bisognerebbe implementare la 'slope' come funzione solo della descent dell'input (IN QUESTO MODO SI USA LAMBDA)
+- Sistemare grafico norm of descent direction (troppe righe tratteggiate assi x, ma solo nel main 1, perché nel 2 non lo fa)
 
 - TASK 3:
 
