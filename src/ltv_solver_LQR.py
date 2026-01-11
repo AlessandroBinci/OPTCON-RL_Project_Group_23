@@ -130,7 +130,7 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
     ppt = AAt.T @ pptp - (BBt.T@PPtp@AAt + SSt).T @ MMt_inv @ mmt + qqt
 
     PP[:,:,tt] = PPt
-    pp[:,tt] = ppt.squeeze() #CHIARIMENTI SU SQUEEZE AL PROF
+    pp[:,tt] = ppt.squeeze()
 
 # Evaluate KK
   

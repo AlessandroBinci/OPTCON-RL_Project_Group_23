@@ -30,9 +30,9 @@ def eq_gen(th1, tau_init, th1_final):
     
         xx_next, dfx, dfu = dyn.dynamics_euler(xx_curr,u_eq1)
 
-        error = xx_curr - xx_next #residual function, i.e. x_k - x_k+1      ----> problem: min error(x_k) 
+        error = xx_curr - xx_next #residual function, i.e. x_k - x_k+1----> problem: min error(x_k) 
 
-        if np.linalg.norm(error) < tol :            # checking if the residual is null, so if the current state is an equilibrium
+        if np.linalg.norm(error) < tol : # checking if the residual is null, so if the current state is an equilibrium
 
             x_eq1 = xx_curr  
 
@@ -57,7 +57,7 @@ def eq_gen(th1, tau_init, th1_final):
             Desired torque for equilibrium position
 
             Args
-                - th1 is the desired angular position theta 1
+            - th1 is the desired angular position theta 1
             - th2 is the desired angular position theta 2
     
             Return
