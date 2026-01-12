@@ -87,14 +87,14 @@ qq_Terminal = np.zeros(ns)
 # Solve the LQR problem
 KK = ltv_LQR(AA_t, BBinch_t, QQreg, RRreg, SSreg, QQreg_final, T_horizon, np.zeros((ns)), qq_reg, rr_reg, qq_Terminal)[0]
 
-# Single perturbation simulation
+# Defining the input perturbation 
 initial_perturbation = 0.25
 
 xx0_pert = xx_opt_traj[:,0].copy() + initial_perturbation
 
 xx_LQR_track = np.zeros((ns, T_horizon)) # defining x_t
 uu_LQR_track = np.zeros((ni, T_horizon)) # defining u_t
-xx_LQR_track[:, 0] = xx0_pert            # defning the initial condition as perturbated
+xx_LQR_track[:, 0] = xx0_pert            # defning the initial condition as perturbed
 state_error = np.zeros((ns, T_horizon))
 
 for tt in range(T_horizon-1):
