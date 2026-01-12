@@ -76,11 +76,3 @@ def eq_gen(th1, tau_init, th1_final):
     x_eq2 = xx_des
 
     return x_eq1, x_eq2, u_eq1, u_eq2
-
-
-
-
-
-
-    
-

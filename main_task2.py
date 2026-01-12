@@ -310,6 +310,10 @@ for kk in range(max_iters):
 xx_history.append(xx.copy())
 uu_history.append(uu.copy())
 
+# Saving optimal trajectory for Task 3
+np.save('optimal_traj_xx.npy', xx)
+np.save('optimal_traj_uu.npy', uu)
+
 # --- PLOT: Optimal Trajectory vs Desired Curve ---
 # Requirement: "Optimal trajectory and desired curve"
 
@@ -388,7 +392,7 @@ plt.grid(True)
 plt.legend(loc='best')
 
 plt.tight_layout()
-plt.savefig(os.path.join(output_folder,'Task2_Velocities.png'), dpi=300) # Salva per il report
+plt.savefig(os.path.join(output_folder,'Task2_Velocities.png'), dpi=300) # Save for the report
 plt.show()
 
 
