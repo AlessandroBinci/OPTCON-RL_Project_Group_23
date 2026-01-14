@@ -146,7 +146,7 @@ plt.subplot(3, 1, 3)
 # Optimal traj.
 plt.plot(time_axis, uu_opt_traj[0, :], 'k--', linewidth=2, label=r'$u_{opt}$ (Optimal)')
 # Tracking traj.
-plt.plot(time_axis, uu_opt_traj[0, :], 'g-', linewidth=2, label=r'$u_{track}$ (Tracking)')
+plt.plot(time_axis, uu_final[0, :], 'g-', linewidth=2, label=r'$u_{track}$ (Tracking)')
 plt.ylabel(r'Torque [Nm]')
 plt.xlabel(r'Time [s]')
 plt.grid(True)
