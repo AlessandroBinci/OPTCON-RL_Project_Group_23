@@ -13,14 +13,13 @@ sys.path.append(src_path)
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-import matplotlib.patches as patches # IMPORTANTE: Per disegnare forme geometriche
+import matplotlib.patches as patches # To draw geometric forms
 import dynamics as dyn
 from ltv_solver_LQR import ltv_LQR
 
 #==============================================================================
 # 1. DATA GENERATION & SIMULATION (Same as before)
 #==============================================================================
-# ... (Questa parte è identica a prima, serve solo a generare i dati xx_sim) ...
 
 try:
     xx_opt_traj = np.load('optimal_traj_xx.npy')
@@ -63,7 +62,7 @@ print("Data generation complete.")
 
 
 #==============================================================================
-# 2. REALISTIC ANIMATION SETUP
+# 2. ANIMATION SETUP
 #==============================================================================
 
 l1 = dyn.l_1
@@ -163,8 +162,6 @@ def init():
     time_text.set_text('')
     trace_x.clear()
     trace_y.clear()
-    # When using blit=False, we don't strictly need to return anything, 
-    # but it's good practice.
     return link1_patch, joint1_patch, link2_patch, tip_patch, trace, time_text
 
 def update(frame):
@@ -205,7 +202,7 @@ frames_indices = range(0, T_horizon, skip)
 print("Starting realistic animation...")
 print("Close the plot window to terminate.")
 
-# IMPORTANT: blit=False is safer for updating patches like this
+# IMPORTANT: if it doesen't work, use blit=False
 anim = FuncAnimation(fig, update, frames=frames_indices,
                      init_func=init, blit=True, interval=dt*skip*1000, repeat=True)
 
