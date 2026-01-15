@@ -164,7 +164,7 @@ xx_final = xx_MPC_track.copy()
 uu_final = uu_MPC_track.copy()
 
 # ==============================================================================
-# 4. PLOTTING RESULTS
+# PLOTTING RESULTS
 # ==============================================================================
 
 # Define temporal axis for plotting

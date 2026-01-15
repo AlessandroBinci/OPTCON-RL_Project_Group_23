@@ -5,7 +5,7 @@
 import numpy as np
 import casadi as ca
 
-def solver_linear_MPC(AA_window, BB_window, QQ, RR, QQf, delta_x0, T_pred, uu_ref_window, umax, umin, ipopt_opts=None): #eliminato xxt
+def solver_linear_MPC(AA_window, BB_window, QQ, RR, QQf, delta_x0, T_pred, uu_ref_window, umax, umin, ipopt_opts=None):
     
     # Setup of Casadi variables
     opti = ca.Opti()
@@ -18,9 +18,6 @@ def solver_linear_MPC(AA_window, BB_window, QQ, RR, QQf, delta_x0, T_pred, uu_re
     # Input variables (Corrections: delta_u)
     # size: ni x T_pred
     uu_pred = opti.variable(ni, T_pred)
-    
-    #xx_pred = opti.variable(ns, T_pred)
-    #uu_pred = opti.variable(ni, T_pred)
 
     # Converting weights to Casadi 2D matrices
     QQ = ca.DM(QQ)
@@ -56,9 +53,6 @@ def solver_linear_MPC(AA_window, BB_window, QQ, RR, QQf, delta_x0, T_pred, uu_re
         # Input Constraints (on TOTAL input)
         # We want: u_min <= (u_ref + delta_u) <= u_max
         # So: u_min - u_ref <= delta_u <= u_max - u_ref
-        
-        # Note: If you want to test WITHOUT constraints first, 
-        # set umax=1000 and umin=-1000 in the main file.
         opti.subject_to(ut + ut_ref <= umax)
         opti.subject_to(ut + ut_ref >= umin)
 
@@ -67,7 +61,7 @@ def solver_linear_MPC(AA_window, BB_window, QQ, RR, QQf, delta_x0, T_pred, uu_re
     xt_final = xx_pred[:, T_pred]
     cost += ca.mtimes([xt_final.T, QQf, xt_final])
 
-    # Solve
+    # Solve: it minimizes the cost
     opti.minimize(cost)
     
     # solver options
