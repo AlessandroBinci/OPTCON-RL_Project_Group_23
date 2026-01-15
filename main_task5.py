@@ -18,7 +18,7 @@ import dynamics as dyn
 from ltv_solver_LQR import ltv_LQR
 
 #==============================================================================
-# 1. DATA GENERATION & SIMULATION (Same as before)
+# DATA GENERATION & SIMULATION
 #==============================================================================
 
 try:

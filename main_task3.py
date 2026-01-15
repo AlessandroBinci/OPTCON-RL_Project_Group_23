@@ -106,6 +106,7 @@ for tt in range(T_horizon-1):
     xx_LQR_track[:,tt+1] = dyn.dynamics_euler(xx_LQR_track[:, tt], uu_LQR_track[:, tt])[0]
 
 
+# Save values for the plot
 xx_final = xx_LQR_track.copy()
 uu_final = uu_LQR_track.copy()
 
@@ -195,7 +196,7 @@ plt.show()
 
 # Plot tracking error for each state
 
-state_labels = ["θ1", "θ2", r"$\dot{\theta}_1$", r"$\dot{\theta}_2$"]
+state_labels = ["theta1", "theta2", r"$\dot{\theta}_1$", r"$\dot{\theta}_2$"]
 
 for i, label in enumerate(state_labels):
     plt.figure(figsize=(8, 5))
