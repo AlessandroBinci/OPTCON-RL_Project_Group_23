@@ -25,7 +25,7 @@ QQ = np.diag([Q1,Q2,Q3,Q4])
 RR = np.array([[1]])
 
 def stage_cost(xx_t, uu_t, xx_ref_t, uu_ref_t):
-    '''
+    r'''
     Stage cost : quadratic cost function
 
     Args:
@@ -50,7 +50,7 @@ def stage_cost(xx_t, uu_t, xx_ref_t, uu_ref_t):
 
 
 def termcost(xxT,xxT_ref, QQT):
-    '''
+    r'''
     Terminal cost : quadratic cost function
 
     Args:
