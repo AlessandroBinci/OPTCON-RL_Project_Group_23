@@ -51,7 +51,7 @@ tf = ref_traj.tf
 dt = dyn.dt
 
 # Defining the time-horizon value for MPC (we use a bigger time horizon value, i.e. four times the trajectory duration)
-T_horizon  = int(tf/dt) 
+T_horizon  = int(tf/dt)
 
 # Defining the time-window size
 T_window = 25
