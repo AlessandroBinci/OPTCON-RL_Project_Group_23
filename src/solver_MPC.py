@@ -6,17 +6,35 @@ import numpy as np
 import casadi as ca
 
 def solver_linear_MPC(AA_window, BB_window, QQ, RR, QQf, delta_x0, T_pred, uu_ref_window, umax, umin, ipopt_opts=None):
-    
+    r"""
+	LQR for LTV system with (time-varying) affine cost
+	
+  Args
+    - AA_window is a (ns x ns (x T_window)) linearization matrix
+    - BB_window is a (ns x ni (x T_window)) linearization matrix
+    - QQ is a (ns x ns (x TT)) stage cost matrix
+    - RR is a (ni x ni (x TT)) stage cost matrix
+    - QQf is a (ns x ns) terminal cost matrix
+    - delta_x0 is the error on the state (measured state - optimal state)
+    - T_pred is T_window, i.e. the time of prediction window
+    - uu_ref_window is the input reference vector that has dimension equal to (ni x (x T_window))
+    - umax is the upper bound on the input torque (constraint)
+    - umin is the lower bound on the input torque (constraint)
+    - ipopt_opts are the solver options
+  Return
+    - uu_pred[:,0] is the first optimal input of the optimal input sequence for that time window (returned as numpy array).
+        If the solver can't find the optimal input a sequence of zeros is returned
+    """
     # Setup of Casadi variables
     opti = ca.Opti()
     
     # State variables (Errors: delta_x)
-    # size: ns x (T_pred + 1) to include the initial state
+    # Size: ns x (T_pred + 1) to include the initial state
     ns, ni = BB_window.shape[0], BB_window.shape[1]
     xx_pred = opti.variable(ns, T_pred + 1)
     
     # Input variables (Corrections: delta_u)
-    # size: ni x T_pred
+    # Size: ni x T_pred
     uu_pred = opti.variable(ni, T_pred)
 
     # Converting weights to Casadi 2D matrices
@@ -24,14 +42,14 @@ def solver_linear_MPC(AA_window, BB_window, QQ, RR, QQf, delta_x0, T_pred, uu_re
     RR = ca.DM(RR)
     QQf = ca.DM(QQf)
     delta_x0 = ca.DM(delta_x0)
-    #xxt = np.array(xxt).squeeze()
 
-    # Cost function and constraints loop
+    # Initializing the cost function
     cost = 0
     
-    # Initial Condition Constraint: The simulation starts at the current error
+    # Initial Condition Constraint: the simulation starts at the current error
     opti.subject_to(xx_pred[:, 0] == delta_x0)
     
+    # Constraints loop
     for tt in range(T_pred):
         
         # Local variables for cleaner code
@@ -39,20 +57,18 @@ def solver_linear_MPC(AA_window, BB_window, QQ, RR, QQf, delta_x0, T_pred, uu_re
         ut = uu_pred[:, tt]     # delta_u at step tt
         ut_ref = uu_ref_window[:, tt] # Reference input at step tt (needed for constraints)
         
-        # Cost Accumulation (Quadratic Regulation)
+        # Cost Accumulation (
         cost += ca.mtimes([xt.T, QQ, xt]) + ca.mtimes([ut.T, RR, ut])
         
         # Dynamics Constraint (LTV)
-        # Note: We use index 'tt' directly because matrices are already sliced
+        # Note: We use index 'tt' directly because matrices have been already sliced
         A_t = ca.DM(AA_window[:,:,tt])
         B_t = ca.DM(BB_window[:,:,tt])    
            
-        # Dynamics: next state = A*curr + B*input
+        # Dynamics: next state = A*x_curr + B*input
         opti.subject_to(xx_pred[:, tt + 1] == ca.mtimes(A_t, xt) + ca.mtimes(B_t, ut))
         
-        # Input Constraints (on TOTAL input)
-        # We want: u_min <= (u_ref + delta_u) <= u_max
-        # So: u_min - u_ref <= delta_u <= u_max - u_ref
+        # Input Constraints
         opti.subject_to(ut + ut_ref <= umax)
         opti.subject_to(ut + ut_ref >= umin)
 
@@ -64,7 +80,7 @@ def solver_linear_MPC(AA_window, BB_window, QQ, RR, QQf, delta_x0, T_pred, uu_re
     # Solve: it minimizes the cost
     opti.minimize(cost)
     
-    # solver options
+    # Solver options
     if ipopt_opts is None:
         ipopt_opts = {
             "ipopt.print_level": 0,

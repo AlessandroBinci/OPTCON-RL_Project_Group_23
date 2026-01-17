@@ -43,7 +43,7 @@ T_horizon  = int(tf/dt)
 ns = dyn.ns
 ni = dyn.ni
 
-# Defining the optimal trajectory variables
+# Loading from task 2 the optimal trajectory variables
 xx_opt_traj = np.load('optimal_traj_xx.npy')
 uu_opt_traj = np.load('optimal_traj_uu.npy')
 
