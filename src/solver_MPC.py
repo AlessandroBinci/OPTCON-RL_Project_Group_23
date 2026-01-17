@@ -43,7 +43,7 @@ def solver_linear_MPC(AA_window, BB_window, QQ, RR, QQf, delta_x0, T_pred, uu_re
         cost += ca.mtimes([xt.T, QQ, xt]) + ca.mtimes([ut.T, RR, ut])
         
         # Dynamics Constraint (LTV)
-        # Note: We use index 'k' directly because matrices are already sliced
+        # Note: We use index 'tt' directly because matrices are already sliced
         A_t = ca.DM(AA_window[:,:,tt])
         B_t = ca.DM(BB_window[:,:,tt])    
            
