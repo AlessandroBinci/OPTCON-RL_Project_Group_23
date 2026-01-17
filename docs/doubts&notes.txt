@@ -27,3 +27,9 @@ La k la usiamo come feedback che controlli l'errore tra quella simulata e la tra
 - TASK 4:
 
 Stesso ragionamento usando MPC piuttosto LQR
+
+
+Doubts:
+Task 4 ----> Servono i bounds?, vanno bene i grafici?
+Task 1 ----> Possiamo lasciare la descent così?
+task 5 ----> Va bene l'animazione?

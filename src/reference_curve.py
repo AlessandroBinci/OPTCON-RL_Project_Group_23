@@ -21,15 +21,34 @@ tf = 20
 
 # Time of transition start
 #t_init = 3.5
-t_init = 8.5
+t_init = 8.5    # in seconds
 T_init = int(t_init/dt)
 
 # Time of transition finish
 #t_end = 6.5
-t_end = 11.5
+t_end = 11.5   # in seconds
 T_end = int(t_end/dt)
 
 def gen(tf, dt, ns, ni, th1, tau_init, th1_final):
+
+    """
+        Generation of reference trajectory as step function from (x_eq1, u_eq1) to (x_eq2, u_eq2)
+
+        Args
+            - tf is the final time in seconds
+            - dt is the discretization step value
+            - ns is the number of states
+            - ni is the number of inputs
+
+            Args to compute equilibria:
+                |- th1 is the initial angular position theta 1
+                |- tau_init is the desired input torque for the equilibrium point 1
+                |- th1_final is the desired angular position theta 1, for equilibrium point 2
+    
+        Return
+        - xx_ref is the state step function reference trajectory
+        - uu_ref is the input step function reference trajectory
+    """
 
     # Total number of steps
     TT = int(tf/dt) 
@@ -53,7 +72,25 @@ def gen(tf, dt, ns, ni, th1, tau_init, th1_final):
 
     return xx_ref, uu_ref
 
-def trapezoidal(ns,ni,th1, tau_init, th1_final): 
+def trapezoidal(ns,ni,th1, tau_init, th1_final):
+
+    """
+        Generation of a (T_end - T_init)s trapezoidal trajectory w/ (x_eq1, u_eq1) as initial point
+        and (x_eq2, u_eq2) as final point
+
+        Args
+            - ns is the number of states
+            - ni is the number of inputs
+
+            Args to compute equilibria:
+                |- th1 is the initial angular position theta 1
+                |- tau_init is the desired input torque for the equilibrium point 1
+                |- th1_final is the desired angular position theta 1, for equilibrium point 2
+    
+        Return
+        - xx_ref is the state trapezoidal trajectory
+        - uu_ref is the input trapezoidal trajectory
+    """
 
     # Trapezoidal period
 
@@ -82,7 +119,6 @@ def trapezoidal(ns,ni,th1, tau_init, th1_final):
     # Constant velocity: v = (3*L)/(2*T) -> 1.5 * L / T, L is the displacement and T is the period
 
     vel_c_xx = (1.5 * L_xx) / (TT_trap * dt)
-    #vel_c_uu = (1.5 * L_uu) / (TT_trap * dt) probabilmente inutile
 
     # Max acceleration: a = (9*L)/(2*T^2) -> 4.5 * L / T^2, L is the displacement and T is the period
     acc_max_xx = (4.5 * L_xx) / ((TT_trap * dt)**2)
@@ -98,21 +134,24 @@ def trapezoidal(ns,ni,th1, tau_init, th1_final):
     xx_t1 = xx_init[0:2] + 0.5 * acc_max_xx * (t1_sec**2)
     uu_t1 = uu_init + 0.5 * acc_max_uu * (t1_sec**2)
 
-   
+    # Defining the three parts of the trapezoidal trajectory
     for tt in range(TT_trap):
 
+        # The motion in the first part is of the uniformly accelerated type 
         if tt<=(t1_change):
 
             xx_ref[0:2,tt] = xx_init[0:2] + 0.5*acc_max_xx[0:2]*((tt*dt)**2)
             uu_ref[:,tt] = uu_init + 0.5*acc_max_uu*((tt*dt)**2)
             xx_ref[2:4,tt] = acc_max_xx * (tt*dt)
 
+        # The motion in the third part is of a uniformly decelerated type
         elif tt > (t2_change):
 
             xx_ref[0:2,tt] = xx_final[0:2] - 0.5*acc_max_xx[0:2]*(((TT_trap-tt)*dt)**2)
             uu_ref[:,tt] = uu_final - 0.5*acc_max_uu*(((TT_trap-tt)*dt)**2)
             xx_ref[2:4,tt] = acc_max_xx * ((TT_trap-tt)*dt)
-                
+
+        # The motion in the second part is of the uniform rectilinear type        
         else:
             xx_ref[0:2,tt] = xx_t1 + acc_max_xx[0:2]* ((t1_change)*dt)* ((tt-t1_change)*dt) 
             uu_ref[:,tt] = uu_t1 + acc_max_uu* ((t1_change)*dt)* ((tt-t1_change)*dt)
@@ -124,6 +163,26 @@ def trapezoidal(ns,ni,th1, tau_init, th1_final):
 
 
 def gen_smooth(tf, dt, ns, ni, th1, tau_init, th1_final):
+
+    """
+        Generation of reference trajectory from (x_eq1, u_eq1) to (x_eq2, u_eq2).
+        The smooth transition between the two equilibria is made by using a trapezoidal trajectory
+
+        Args
+            - tf is the final time in seconds
+            - dt is the discretization step value
+            - ns is the number of states
+            - ni is the number of inputs
+
+            Args to compute equilibria:
+                |- th1 is the initial angular position theta 1
+                |- tau_init is the desired input torque for the equilibrium point 1
+                |- th1_final is the desired angular position theta 1, for equilibrium point 2
+    
+        Return
+        - xx_ref is the state reference trajectory w/ smooth transition (trapezoidal)
+        - uu_ref is the input reference trajectory w/ smooth transition (trapezoidal)
+    """
 
     # Total number of steps
     TT = int(tf/dt)

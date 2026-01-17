@@ -14,7 +14,7 @@ ns = dyn.ns
 ni = dyn.ni
 
 # Defining cost matrices
-Q1 = 100    # w/ these values, we're giving more weught to the angles tracking
+Q1 = 100    # w/ these values, we're giving more weight to the angles tracking
 Q2 = 100
 Q3 = 1
 Q4 = 1
@@ -35,14 +35,15 @@ def stage_cost(xx_t, uu_t, xx_ref_t, uu_ref_t):
         - uu_ref_t \in \R^1 input reference at time t
 
     Return:
-        - cost at (xx_t,uu_t)
-        - gradient of l wrt x, at (xx_t,uu_t)
-        - gradient of l wrt u, at (xx_t,uu_t)
+        - ll is the cost at (xx_t,uu_t)
+        - lx is the gradient of l wrt x, at (xx_t,uu_t)
+        - lu is the gradient of l wrt u, at (xx_t,uu_t)
 
     '''
-    #Defining the cost
+    # Defining the cost for tracking 
     ll = 0.5*((xx_t - xx_ref_t).T @ QQ @ (xx_t - xx_ref_t)) + 0.5*((uu_t - uu_ref_t).T @ RR @ (uu_t - uu_ref_t))
-    #Defining the gradients
+    
+    # Defining the gradients
     lx = QQ @(xx_t - xx_ref_t)
     lu = RR @(uu_t - uu_ref_t)
 
@@ -59,8 +60,8 @@ def termcost(xxT,xxT_ref, QQT):
         - QQT matrix QQ at final time T
 
     Return:
-        - cost at (xxT)
-        - gradient of l wrt x, at (xxT)
+        - llT is the cost at (xxT)
+        - lTx is the gradient of l wrt x, at (xxT)
         
 
     '''

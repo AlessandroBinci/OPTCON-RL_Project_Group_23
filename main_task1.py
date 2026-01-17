@@ -60,7 +60,6 @@ th1_init= np.deg2rad(45)
 tau1_des = 0
 
 # Defining the final angular position of the first link for the second equilibrium point
-
 th1_final = np.deg2rad(90)
 
 
@@ -88,7 +87,6 @@ th1_final = np.deg2rad(90)
 xx_ref, uu_ref = ref_traj.gen(tf, dt, ns, ni, th1_init, tau1_des, th1_final)
 
 # Defining the initial guess
-
 xx = np.zeros((ns, TT))
 uu = np.zeros((ni, TT))
 
@@ -116,17 +114,17 @@ cost_history = []
 # List to store data of Armijo plot (Line Search) (required later for plots)
 global_armijo_data = []
 
-#Newton's method
+# Newton's method
 for kk in range(max_iters):
-    AA_kk = np.zeros((ns, ns, TT))          #initialization of matrices
+    AA_kk = np.zeros((ns, ns, TT))          # initialization of matrices
     BB_kk = np.zeros((ns, ni, TT))
     qq_kk = np.zeros((ns, TT))
     rr_kk = np.zeros((ni, TT))
-    cost_current = 0
+    cost_current = 0                     # inizialization of the cost
     xx_history.append(xx.copy())         # saving the state at each iteration
     uu_history.append(uu.copy())         # saving the input at each iteration
     
-    # computing the matrices for the solver and the stage cost
+    # Computing the matrices for the solver and the stage cost
     for tt in range(TT-1):
         AA_kk[:,:, tt] = (dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [1]).T
         BB_kk[:,:, tt] = (dyn.dynamics_euler(xx[:, tt], uu[:, tt]) [2]).T
@@ -135,7 +133,7 @@ for kk in range(max_iters):
         rr_kk[:,tt] = cst.stage_cost(xx[:,tt],uu[:,tt],xx_ref[:,tt],uu_ref[:,tt]) [2]
         cost_current += cost_actual 
 
-    # computing the terminal cost and adding it to the total cost
+    # Computing the terminal cost and adding it to the total cost
     termcost_actual = cst.termcost(xx[:,-1], xx_ref[:,-1],QQ) [0]   
     qqT_kk = cst.termcost(xx[:,-1], xx_ref[:,-1],QQ) [1]
     cost_current += termcost_actual
@@ -155,9 +153,11 @@ for kk in range(max_iters):
     max_armijo_iters = 10
     ii = 1
     slope = 0
-
+    
+    # Computing the slope for the Armijo loop
     for tt in range(TT):
-        # Dot Product of Gradient_x * Delta_x_lin: we're computing the slope for the Armijo loop
+
+        # Dot Product of Gradient_x * Delta_x_lin
         slope += np.dot(qq_kk[:, tt], dx_lin[:, tt])
     
         # If we are not in the last step, we add Gradient_u * Delta_u_lin (because in the last time instant T, uu isn't defined)
@@ -166,10 +166,12 @@ for kk in range(max_iters):
 
     # Adding slope term for the final time T (Gradient_x_T * Delta_x_T)
     slope += np.dot(qqT_kk, dx_lin[:, -1])
+
+
     # ---------------------------------------------------------
-    # Starting generating data for Armijo plot (Line Search)
+    # Starting generating data for Armijo plots (Line Search)
     # ---------------------------------------------------------
-    iters_to_debug = [0, 1, 2] # iteration samples of which we'll plot armijo
+    iters_to_debug = [0, 1, 2, 5] # iteration samples of which we'll plot armijo
     armijo_data_iter = {}  # dictionary to store iterations' data
 
     # Computing Line Search curve (Feedback) only for iteration {kk} equal to 0,1,5
@@ -177,8 +179,8 @@ for kk in range(max_iters):
 
         print(f"Computing Line Search curve (Feedback) only for iteration {kk}")
         
-        # Defining X-axis (20 points between 0 and 1.2)
-        gammas_test = np.linspace(0, 1.2, 20) 
+        # Defining X-axis (20 points between 0 and 1.0)
+        gammas_test = np.linspace(0, 1.0, 100) 
         # Initializing lists to store later the real cost and the armijo threshold line
         costs_test = []
         armijo_thresholds = []
@@ -249,7 +251,6 @@ for kk in range(max_iters):
     while ii < max_armijo_iters:
 
         # Temporary solution update
-
         xx_temp = np.zeros((ns,TT))
         uu_temp=np.zeros((ni,TT))
         xx_temp[:,0] = xx[:, 0]
@@ -282,14 +283,17 @@ for kk in range(max_iters):
         temp_tested_costs.append(cost_temp)
        
         if cost_temp >= cost_current  + cc*gamma*slope:
-                  # updating the stepsize
+                  
+                  # Updating the stepsize
                   gamma = beta* gamma
                   ii += 1
         else:
+
             # Saving the accepted point
             if kk in iters_to_debug and 'armijo_data_iter' in locals() and armijo_data_iter:
                 armijo_data_iter['accepted_gamma'] = gamma
                 armijo_data_iter['accepted_cost'] = cost_temp
+
                 # Saving the history of the attempts
                 armijo_data_iter['tested_gammas'] = temp_tested_gammas
                 armijo_data_iter['tested_costs'] = temp_tested_costs
@@ -309,8 +313,8 @@ for kk in range(max_iters):
 xx_history.append(xx.copy())
 uu_history.append(uu.copy())
 
-# --- PLOT: Optimal Trajectory vs Desired Curve ---
-# Requirement: "Optimal trajectory and desired curve"
+# --- PLOT 1: Optimal Trajectory vs Desired Curve ---
+# Visualization of the optimal trajectories of states x1, x2 and the input wrt their own desired reference curves
 
 # Temporal axis definition
 # We assume that 'tf' and 'TT' are defined in our main
@@ -390,6 +394,8 @@ plt.tight_layout()
 plt.savefig(os.path.join(output_folder,'Task1_Velocities.png'), dpi=300)
 plt.show()
 
+# --- PLOT 2: Optimal trajectory (states x1,x2 and u), desired curve and few intermediate trajectories ---
+# Visualization of the optimal trajectories of states x1, x2 and the input u at some intermediate iterations
 
 # Define time axis
 time_axis = np.linspace(0, tf, TT)
@@ -414,8 +420,8 @@ num_plots = len(indices_to_plot)
 
 # --- MANUAL COLOR MANAGEMENT ---
 # Here we can define manually the color for each curve which will be plotted.
-# The order corresponds to: [Iter 0, Iter 1, Iter 2, Finale] 
-# The following names can be used: ('red', 'blue', 'grey')
+# The order corresponds to: [Iter 0, Iter 1, Iter 2, Final] 
+# The following names can be used: ('orange','blue','green','red')
 
 custom_colors = [
     'tab:orange',  # Iter 0 (Initial Guess)
@@ -483,7 +489,9 @@ plt.savefig(os.path.join(output_folder,'Task1_Evolution_Pos_Input_ManualColors.p
 plt.show()
 
 
-# --- FIGURE 2: Velocities Evolution ---
+# --- PLOT 2-bis: Optimal trajectory (states x3 and x4), desired curve and few intermediate trajectories ---
+# Visualization of the optimal trajectories of states x3 and x4 (velocities) at some intermediate iterations
+
 plt.figure(figsize=(10, 8))
 
 # Subplot 1: Velocity Theta 1
@@ -522,8 +530,8 @@ plt.tight_layout()
 plt.savefig(os.path.join(output_folder,'Task1_Evolution_Velocities_ManualColors.png'), dpi=300)
 plt.show()
 
-# --- PLOT: Armijo Line Search (Updated with Tested Steps) ---
-# Requirement: "Armijo Line Search"
+# --- PLOT 3: Armijo Line Search (Updated with Tested Steps) ---
+# Visualization of Armijo Line Search
 
 if len(global_armijo_data) > 0:
     for data in global_armijo_data:
@@ -605,8 +613,8 @@ if len(global_armijo_data) > 0:
         plt.savefig(os.path.join(output_folder,f'Task1_Armijo_LineSearch_Iter_{iter_idx}.png'), dpi=300)
         plt.show()
 
-# --- PLOT: Norm of the Descent Direction (Semi-Log Scale) ---
-# Requirement: "Norm of the descent direction along iterations (semi-logarithmic scale)"
+# --- PLOT 4: Norm of the Descent Direction (Semi-Log Scale) ---
+# Visualization of the Norm of the descent direction along iterations (semi-logarithmic scale)
 
 if len(dx_history) > 0 and len(du_history) > 0:
     
@@ -648,8 +656,8 @@ else:
     print("No stored history of the directions (dx_history empty).")
 
 
-# --- PLOT: Cost along iterations (semi-logarithmic scale) ---
-# Requirement: "Cost along iterations (semi-logarithmic scale)"
+# --- PLOT 5: Cost along iterations (semi-logarithmic scale) ---
+# Visualization of the Cost along iterations (semi-logarithmic scale)
 
 if len(cost_history) > 0:
     plt.figure(figsize=(10, 8))
@@ -664,7 +672,7 @@ if len(cost_history) > 0:
     plt.xlabel("Iteration", fontsize=14)
     plt.ylabel("Cost", fontsize=14)
     
-    # Specific grif for log plot (both for major and minor lines)
+    # Specific grid for log plot (both for major and minor lines)
     plt.grid(True, which="major", linestyle='-', linewidth=0.8)
     plt.grid(True, which="minor", linestyle=':', linewidth=0.5)
 
