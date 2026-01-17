@@ -466,6 +466,7 @@ for k, idx in enumerate(indices_to_plot):
              color=current_colors[k], linestyle='-', linewidth=LW)
 plt.ylabel(r'$\theta_2$ [rad]')
 plt.grid(True)
+plt.legend(loc='best', fontsize='small')
 
 # Subplot 3: Input Evolution
 plt.subplot(3, 1, 3)
@@ -476,6 +477,7 @@ for k, idx in enumerate(indices_to_plot):
 plt.ylabel('Torque [Nm]')
 plt.xlabel('Time [s]')
 plt.grid(True)
+plt.legend(loc='best', fontsize='small')
 
 plt.tight_layout()
 plt.savefig(os.path.join(output_folder,'Task2_Evolution_Pos_Input_ManualColors.png'), dpi=300)
@@ -518,6 +520,7 @@ for k, idx in enumerate(indices_to_plot):
 plt.ylabel(r'$\dot{\theta}_2$ [rad/s]')
 plt.xlabel('Time [s]')
 plt.grid(True)
+plt.legend(loc='best', fontsize='small')
 
 plt.tight_layout()
 plt.savefig(os.path.join(output_folder,'Task2_Evolution_Velocities_ManualColors.png'), dpi=300)
@@ -638,7 +641,7 @@ if len(dx_history) > 0 and len(du_history) > 0:
     
     plt.title('Norm of Descent Direction along Iterations')
     plt.xlabel('Iteration $k$')
-    plt.ylabel(r'Norm $||\Delta z^k|| = \sqrt{||\Delta x^k||^2 + ||\Delta u^k||^2}$')
+    plt.ylabel(r'Norm $||\Delta z^k||$')
     plt.grid(True, which="both", axis="both", ls="--", alpha=0.6) # Specific grid for log plot
     plt.legend(loc='best')
     
@@ -661,7 +664,7 @@ if len(cost_history) > 0:
                  color='tab:cyan', marker='o', linestyle='-', 
                  linewidth=2, markersize=8)
 
-    plt.title("Cost along iterations (log scale)", fontsize=16)
+    plt.title("Cost along Iterations", fontsize=16)
     plt.xlabel("Iteration", fontsize=14)
     plt.ylabel("Cost", fontsize=14)
     
