@@ -13,6 +13,20 @@ import dynamics as dyn
 
 def eq_gen(th1, tau_init, th1_final):
 
+    """
+        Computation of equilibrium configurations (x_eq1, u_eq1) and (x_eq2, u_eq2)
+
+        Args
+        - th1 is the initial angular position theta 1
+        - tau_init is the desired input torque for the equilibrium point 1
+        - th1_final is the desired angular position theta 1, for equilibrium point 2
+    
+        Return
+        - x_eq1 is the state at equilbrium point 1
+        - x_eq2 is the state at equilbrium point 2
+        - u_eq1 is the input at equilibrium point 1 (tau_init)
+        - u_eq2 is the input at equilibrium point 2
+    """
      #------ Finding the first equilibrium--------
 
     
@@ -54,7 +68,7 @@ def eq_gen(th1, tau_init, th1_final):
     def inv_dyn_tau (th1,th2):
 
         """
-            Desired torque for equilibrium position
+            Desired torque for equilibrium point 2
 
             Args
             - th1 is the desired angular position theta 1
@@ -74,5 +88,8 @@ def eq_gen(th1, tau_init, th1_final):
     u_eq2[0] = tau_des
 
     x_eq2 = xx_des
+
+    print(f"The first equilibrium point (x_eq1, u_eq2) is:\n{x_eq1}, {u_eq1}")
+    print(f"The second equilibrium point (x_eq1, u_eq2) is:\n{x_eq2}, {u_eq2}")
 
     return x_eq1, x_eq2, u_eq1, u_eq2

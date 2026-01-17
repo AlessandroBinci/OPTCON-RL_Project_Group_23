@@ -11,17 +11,22 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
 	LQR for LTV system with (time-varying) affine cost
 	
   Args
-    - AAin (nn x nn (x TT)) matrix
-    - BBin (nn x mm (x TT)) matrix
-    - QQin (nn x nn (x TT)), RR (mm x mm (x TT)), SS (mm x nn (x TT)) stage cost
-    - QQfin (nn x nn) terminal cost
-    - qq (nn x (x TT)) affine terms
-    - rr (mm x (x TT)) affine terms
-    - qqf (nn x (x TT)) affine terms - final cost
-    - TT time horizon
+    - AAin is a (ns x ns (x TT)) linearization matrix
+    - BBin is a (ns x ni (x TT)) linearization matrix
+    - QQin is a (ns x ns (x TT)) stage cost matrix
+    - RRin is a (ni x ni (x TT)) stage cost matrix
+    - SSin is a (ni x ns (x TT)) stage cost matrix
+    - QQfin is a (ns x ns) terminal cost matrix
+    - qqin is a (ns x (x TT)) affine term
+    - rrin is a (ni x (x TT)) affine term
+    - qqfin is a (ns x (x TT)) affine term for terminal cost
+    - TT is the time horizon
   Return
-    - KK (mm x nn x TT) optimal gain sequence
-    - PP (nn x nn x TT) riccati matrix
+    - KK is the (ni x ns x TT) optimal gain matrix
+    - sigma is the feedforward term
+    - PP is the (ns x ns x TT) Riccati matrix
+    - xxout is the updating variation deltax of the LQR problem
+    - uuout is the updating variation deltau of the LQR problem
 """
   try:
     # check if matrix is (.. x .. x TT) - 3 dimensional array 
@@ -106,12 +111,11 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
 
   xx[:,0] = x0    # the first variation delta_x0 = 0
 
-  #Set the final conditions
-
+  # Setting the final conditions
   PP[:,:,-1] = QQT
   pp[:,-1] = qqT
 
-# Solve Riccati equation
+# Solving backwards the Riccati equation
   for tt in reversed(range(TT-1)):
     QQt = QQ[:,:,tt]
     qqt = qq[:,tt][:,None]
@@ -132,7 +136,7 @@ def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = Non
     PP[:,:,tt] = PPt
     pp[:,tt] = ppt.squeeze()
 
-# Evaluate KK
+# Evaluating KK and sigma
   
   for tt in range(TT-1):
     QQt = QQ[:,:,tt]
