@@ -87,8 +87,10 @@ qq_Terminal = np.zeros(ns)
 # Solve the LQR problem
 KK = ltv_LQR(AA_t, BBinch_t, QQreg, RRreg, SSreg, QQreg_final, T_horizon, np.zeros((ns)), qq_reg, rr_reg, qq_Terminal)[0]
 
-# Defining the input perturbation 
-initial_perturbation = 0.25
+# Defining the input perturbation for each state
+initial_perturbation = np.random.uniform(0, 0.5, 4) # Syntax: uniform(start, end, num_elem)
+#initial_perturbation = 0.25
+print(f"The initial perturbation on each state is:\n{initial_perturbation}")
 
 xx0_pert = xx_opt_traj[:,0].copy() + initial_perturbation
 

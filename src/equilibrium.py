@@ -13,7 +13,7 @@ import dynamics as dyn
 
 def eq_gen(th1, tau_init, th1_final):
 
-    """
+    r"""
         Computation of equilibrium configurations (x_eq1, u_eq1) and (x_eq2, u_eq2)
 
         Args
@@ -67,7 +67,7 @@ def eq_gen(th1, tau_init, th1_final):
 
     def inv_dyn_tau (th1,th2):
 
-        """
+        r"""
             Desired torque for equilibrium point 2
 
             Args

@@ -31,7 +31,7 @@ T_end = int(t_end/dt)
 
 def gen(tf, dt, ns, ni, th1, tau_init, th1_final):
 
-    """
+    r"""
         Generation of reference trajectory as step function from (x_eq1, u_eq1) to (x_eq2, u_eq2)
 
         Args
@@ -74,7 +74,7 @@ def gen(tf, dt, ns, ni, th1, tau_init, th1_final):
 
 def trapezoidal(ns,ni,th1, tau_init, th1_final):
 
-    """
+    r"""
         Generation of a (T_end - T_init)s trapezoidal trajectory w/ (x_eq1, u_eq1) as initial point
         and (x_eq2, u_eq2) as final point
 
@@ -164,7 +164,7 @@ def trapezoidal(ns,ni,th1, tau_init, th1_final):
 
 def gen_smooth(tf, dt, ns, ni, th1, tau_init, th1_final):
 
-    """
+    r"""
         Generation of reference trajectory from (x_eq1, u_eq1) to (x_eq2, u_eq2).
         The smooth transition between the two equilibria is made by using a trapezoidal trajectory
 

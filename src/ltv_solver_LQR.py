@@ -7,7 +7,7 @@ import cvxpy as cp
 
 def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = None, qqfin = None):
 
-  """
+  r"""
 	LQR for LTV system with (time-varying) affine cost
 	
   Args
