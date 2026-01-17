@@ -3,13 +3,7 @@
 # Problem 2 with set of parameters 1
 
 import numpy as np
-import sympy as sy
-import math
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-
 import dynamics as dyn
-
 import equilibrium as eq
 
 # Defining the discretization step value

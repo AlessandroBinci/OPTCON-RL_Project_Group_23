@@ -25,19 +25,7 @@ else:
 ### --- IMPORTS --- ###
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import sympy as sp
-import math
-from mpl_toolkits import mplot3d # used for 3D plot
-import cvxpy as cvx
-import signal
-from scipy.optimize import minimize
-from matplotlib.animation import FuncAnimation
-import control 
-import random
-
 import dynamics as dyn
-import equilibrium as eq
 import reference_curve as ref_traj
 import cost as cst
 from ltv_solver_LQR import ltv_LQR

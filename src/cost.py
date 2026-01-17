@@ -3,11 +3,6 @@
 # Problem 2 with set of parameters 1
 
 import numpy as np
-import sympy as sy
-import math
-import matplotlib.pyplot as plt
-import control as ctrl
-
 import dynamics as dyn
 
 ns = dyn.ns

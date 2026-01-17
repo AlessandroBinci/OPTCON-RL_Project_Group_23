@@ -3,7 +3,6 @@
 # Problem 2 with set of parameters 1
 
 import numpy as np
-import cvxpy as cp
 
 def ltv_LQR(AAin, BBin, QQin, RRin, SSin, QQfin, TT, x0, qqin = None, rrin = None, qqfin = None):
 
