@@ -25,21 +25,9 @@ else:
 ### --- IMPORTS --- ###
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import sympy as sp
-import math
-from mpl_toolkits import mplot3d # used for 3D plot
-import cvxpy as cvx
-import signal
 from scipy.optimize import minimize
-from matplotlib.animation import FuncAnimation
-import control 
-import random
-
 import dynamics as dyn
-import equilibrium as eq
 import reference_curve as ref_traj
-import cost as cst
 from ltv_solver_LQR import ltv_LQR
 
 # Defining final time in seconds
@@ -56,12 +44,11 @@ ns = dyn.ns
 ni = dyn.ni
 
 # Defining the optimal trajectory variables
-
 xx_opt_traj = np.load('optimal_traj_xx.npy')
 uu_opt_traj = np.load('optimal_traj_uu.npy')
 
 
-# Linearize dynamics along the trajectory
+# Linearizing dynamics along the trajectory
 AA_t = np.zeros((ns, ns, T_horizon))
 BBinch_t = np.zeros((ns, ni, T_horizon))
 
@@ -74,37 +61,34 @@ for tt in range(T_horizon):
     AA_t[:, :, tt] = A
     BBinch_t[:, :, tt] = B
 
-# Define LQR cost matrices
+# Defining LQR cost matrices
 QQreg = np.diag([100, 100, 1, 1])
 RRreg = np.diag([1])
 QQreg_final = np.diag([100, 100, 1, 1])
 SSreg = np.zeros((ni, ns))
-
 qq_reg = np.zeros((ns, T_horizon))
 rr_reg = np.zeros((ni, T_horizon))
 qq_Terminal = np.zeros(ns)
 
-# Solve the LQR problem
+# Solving the LQR problem to get KK gain matrix
 KK = ltv_LQR(AA_t, BBinch_t, QQreg, RRreg, SSreg, QQreg_final, T_horizon, np.zeros((ns)), qq_reg, rr_reg, qq_Terminal)[0]
 
-# Defining the input perturbation for each state
+# Defining the input perturbation, as random, for each state
 initial_perturbation = np.random.uniform(0, 0.5, 4) # Syntax: uniform(start, end, num_elem)
-#initial_perturbation = 0.25
 print(f"The initial perturbation on each state is:\n{initial_perturbation}")
-
 xx0_pert = xx_opt_traj[:,0].copy() + initial_perturbation
 
+# Initializing tracking trajectories and the state error
 xx_LQR_track = np.zeros((ns, T_horizon)) # defining x_t
 uu_LQR_track = np.zeros((ni, T_horizon)) # defining u_t
 xx_LQR_track[:, 0] = xx0_pert            # defning the initial condition as perturbed
-state_error = np.zeros((ns, T_horizon))
+state_error = np.zeros((ns, T_horizon))  # defining error on the state
 
+# Applying LQR tracking
 for tt in range(T_horizon-1):
 
     state_error[:,tt] = xx_LQR_track[:,tt] - xx_opt_traj[:,tt]
-
     uu_LQR_track[:,tt] = uu_opt_traj[:,tt] + KK[:,:,tt] @ state_error[:,tt]
-
     xx_LQR_track[:,tt+1] = dyn.dynamics_euler(xx_LQR_track[:, tt], uu_LQR_track[:, tt])[0]
 
 
@@ -113,11 +97,10 @@ xx_final = xx_LQR_track.copy()
 uu_final = uu_LQR_track.copy()
 
 
-# --- PLOT: Tracking Trajectory vs Optimal Trajectory ---
-# Requirement: "Tracking trajectory and optimal trajectory"
+# --- PLOT 1: Tracking Trajectory vs Optimal Trajectory (Reference curve) ---
+# Visualization of the tracking trajectory and the optimal one
 
 # Temporal axis definition
-# We assume that 'tf' and 'T_horizon' are defined 
 time_axis = np.linspace(0, tf, T_horizon)
 
 # Figure creation
@@ -130,7 +113,7 @@ plt.plot(time_axis, xx_opt_traj[0, :], 'k--', linewidth=2, label=r'$\theta_{1,op
 # Tracking traj. - Solid Colored Line
 plt.plot(time_axis, xx_final[0, :], 'b-', linewidth=2, label=r'$\theta_{1,track}$ (Tracking)')
 plt.ylabel(r'$\theta_1$ [rad]')
-plt.title('Tracking trajectory vs Optimal Trajectory')
+plt.title('Tracking Trajectory vs Optimal Trajectory')
 plt.grid(True)
 plt.legend(loc='best')
 
@@ -170,18 +153,18 @@ plt.figure(figsize=(10, 8))
 
 # --- Subplot 1: Third State (x3 - Velocity Theta 1) ---
 plt.subplot(2, 1, 1)
-# Optimal traj. (generally zero)
+# Optimal traj. 
 plt.plot(time_axis, xx_opt_traj[2, :], 'k--', linewidth=2, label=r'$\dot{\theta}_{1,opt}$ (Optimal)')
 # Tracking traj.
 plt.plot(time_axis, xx_final[2, :], 'b-', linewidth=2, label=r'$\dot{\theta}_{1,track}$ (Tracking)')
 plt.ylabel(r'$\dot{\theta}_1$ [rad/s]')
-plt.title('Tracking velocities vs Optimal Velocities')
+plt.title('Tracking Velocities vs Optimal Velocities')
 plt.grid(True)
 plt.legend(loc='best')
 
 # --- Subplot 2: Fourth State (x4 - Velocity Theta 2) ---
 plt.subplot(2, 1, 2)
-# Optimal traj. (generally zero)
+# Optimal traj. 
 plt.plot(time_axis, xx_opt_traj[3, :], 'k--', linewidth=2, label=r'$\dot{\theta}_{2,opt}$ (Optimal)')
 # Tracking traj.
 plt.plot(time_axis, xx_final[3, :], 'r-', linewidth=2, label=r'$\dot{\theta}_{2,track}$ (Tracking)')
@@ -195,16 +178,17 @@ plt.savefig(os.path.join(output_folder,'Task3_Velocities.png'), dpi=300) # Save 
 plt.show()
 
 
+# --- PLOT 2: Tracking Error for each state and for the input ---
+# Visualization of the tracking errors
 
-# Plot tracking error for each state
-
-state_labels = ["theta1", "theta2", r"$\dot{\theta}_1$", r"$\dot{\theta}_2$"]
+# Plot tracking errors for state variables
+state_labels = [r"${\theta}_1$", r"${\theta}_2$", r"$\dot{\theta}_1$", r"$\dot{\theta}_2$"]
 
 for i, label in enumerate(state_labels):
     plt.figure(figsize=(8, 5))
     plt.plot(time_axis, np.abs(xx_final[i, :] - xx_opt_traj[i, :]), label=f"Tracking Error in {label}")
     plt.title(f"Tracking Error in {label}")
-    plt.xlabel("time [s]")
+    plt.xlabel("Time [s]")
     plt.ylabel(f"Error in {label}")
     plt.grid()
     plt.legend()
@@ -213,12 +197,12 @@ for i, label in enumerate(state_labels):
     print(plot_name)
     plt.show()
 
-# Plot tracking error for input
+# Plot tracking error for input variable
 input_tracking_error = np.abs(uu_final - uu_opt_traj)
 plt.figure(figsize=(8, 5))
 plt.plot(time_axis, input_tracking_error[0, :], label="Tracking Error in Input (u)")
 plt.title("Tracking Error in Input (u)")
-plt.xlabel("time [s]")
+plt.xlabel("Time [s]")
 plt.ylabel("Error in u")
 plt.grid()
 plt.legend()
