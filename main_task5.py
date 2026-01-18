@@ -207,10 +207,11 @@ print("Close the plot window to terminate.")
 anim = FuncAnimation(fig, update, frames=frames_indices,
                      init_func=init, blit=True, interval=dt*skip*1000, repeat=True)
 
-fps = int(1 / (dt * skip))  # oppure metti un valore tipo 30
+#Saving the animation as .GIF
+fps = int(1 / (dt * skip))  # it mantains the true velocity of the simulation
 writer = PillowWriter(fps=fps)
 
 anim.save("task5_animation.gif", writer=writer, dpi=120)
-print("GIF salvata come task5_animation.gif")
+print("GIF saved as task5_animation.gif")
 
 plt.show()
