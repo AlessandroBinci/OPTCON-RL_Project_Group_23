@@ -16,6 +16,7 @@ from matplotlib.animation import FuncAnimation
 import matplotlib.patches as patches # To draw geometric forms
 import dynamics as dyn
 from ltv_solver_LQR import ltv_LQR
+from matplotlib.animation import PillowWriter
 
 #==============================================================================
 # DATA GENERATION & SIMULATION
@@ -205,5 +206,11 @@ print("Close the plot window to terminate.")
 # IMPORTANT: if it doesen't work, use blit=False
 anim = FuncAnimation(fig, update, frames=frames_indices,
                      init_func=init, blit=True, interval=dt*skip*1000, repeat=True)
+
+fps = int(1 / (dt * skip))  # oppure metti un valore tipo 30
+writer = PillowWriter(fps=fps)
+
+anim.save("task5_animation.gif", writer=writer, dpi=120)
+print("GIF salvata come task5_animation.gif")
 
 plt.show()
