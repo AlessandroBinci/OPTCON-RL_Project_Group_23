@@ -23,10 +23,11 @@ def eq_gen(th1, tau_init, th1_final):
         - u_eq1 is the input at equilibrium point 1 (tau_init)
         - u_eq2 is the input at equilibrium point 2
     """
-     #------ Finding the first equilibrium--------
+    
+    #------ Finding the first equilibrium--------
 
     
-    max_iters = 500 # maximum number of iterations # DA CHIEDERE
+    max_iters = 500 # maximum number of iterations
     tol = 1e-8 #tolerance for the residual in the newton's method
     
     xx_curr = np.zeros(dyn.ns) # initial guess for the state
