@@ -55,7 +55,7 @@ FF[0,0] = f_1
 FF[1,1] = f_2
 
 acc_vec = sy.zeros(2,1)                # initializing vector that contains accelerations of th1 and th2
-MM_inv = MM.inv()                      # computing the inverse of mass matrix
+MM_inv = MM.inv()                      # computing the inverse of inertia matrix
 vel_vec = sy.Matrix([[dth1], [dth2]])  # it corresponds to np.array() in numpy
 u_vec = sy.Matrix([[tau], [0]])
 acc_vec = MM_inv @ (u_vec - GG - (CC @ vel_vec) - (FF @ vel_vec)) # computing the acceleration
