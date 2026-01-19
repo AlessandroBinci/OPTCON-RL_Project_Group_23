@@ -11,16 +11,18 @@ dt = dyn.dt
 
 # Defining final time in seconds
 #tf = 10
-tf = 20
-
+#tf = 20
+tf = 30.5
 # Time of transition start
 #t_init = 3.5
-t_init = 8.5    # in seconds
+#t_init = 8.5    # in seconds
+t_init = 13    # in seconds
 T_init = int(t_init/dt)
 
 # Time of transition finish
 #t_end = 6.5
-t_end = 11.5   # in seconds
+#t_end = 11.5   # in seconds
+t_end = 17.5
 T_end = int(t_end/dt)
 
 def gen(tf, dt, ns, ni, th1, tau_init, th1_final):
