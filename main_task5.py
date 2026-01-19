@@ -32,9 +32,8 @@ import dynamics as dyn
 from ltv_solver_LQR import ltv_LQR
 from matplotlib.animation import PillowWriter # Writer to save the animation as .gif
 
-#==============================================================================
+
 # DATA GENERATION & SIMULATION
-#==============================================================================
 # Running the simulation logic from Task 3
 # Generating the optimal trajectory of the perturbated system controlled by LQR
 
@@ -96,9 +95,7 @@ for tt in range(T_horizon - 1):
     xx_sim[:, tt + 1] = dyn.dynamics_euler(xx_sim[:, tt], uu_sim[:, tt])[0]
 
 
-#==============================================================================
-# 2. ANIMATION SETUP
-#==============================================================================
+# ANIMATION SETUP
 # Defining visual properties and geometry for animation
 
 # Retrieving physical lengths of the links
