@@ -46,10 +46,10 @@ The project is divided into sequential tasks ranging from dynamics modeling to M
 - Set Final Angle: Adjust the final angle ${\theta}_1$ for the computation of the second equilibrium changing **th1_final** in *main_task1.py* and *main_task2.py*.
 - Cost Modifications: To change costs for the Newton's-like algorithm:
   - Open *cost.py* and adjust:
-    - **Q1**: Cost for *${\theta}_1$*.
-    - **Q2**: Cost for *${\theta}_2$*.
-    - **Q3**: Cost for the derivative of *${\theta}_1$*.
-    - **Q4**: Cost for the derivative of *${\theta}_2$*.
+    - **Q1**: Cost for ${\theta}_1$.
+    - **Q2**: Cost for ${\theta}_2$.
+    - **Q3**: Cost for the derivative of ${\theta}_1$.
+    - **Q4**: Cost for the derivative of ${\theta}_2$.
     - **RR**: Cost for the input.
 
 ### Task 2
@@ -90,6 +90,6 @@ Note that **CasADi** is required for the MPC task.
 
 ```bash
 pip install numpy scipy matplotlib sympy casadi
-
+```
 ---
-Reference: Optimal Control Course Project #2 - First Semester - Academic Year 2025/2026*
+*Reference: Optimal Control Course Project #2 - First Semester - Academic Year 2025/2026*
