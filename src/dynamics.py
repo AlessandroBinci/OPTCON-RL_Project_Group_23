@@ -35,7 +35,7 @@ tau = u_sym[0]
 
 # Matrices
 MM = sy.zeros(2,2)
-MM[0,0] = inertia_1 + inertia_2 + (lc_1*m_1) + m_2*(((l_1)**2) + (2*l_1*l_2* sy.cos(th2))+ (lc_2)**2 )
+MM[0,0] = inertia_1 + inertia_2 + ((lc_1**2)*m_1) + m_2*(((l_1)**2) + (2*l_1*l_2* sy.cos(th2))+ ((lc_2)**2) )
 MM[1,0] = inertia_2 + (lc_2*m_2)*((l_1*sy.cos(th2))+lc_2)
 MM[0,1] = MM [1,0]
 MM[1,1] = inertia_2 + (((lc_2)**2)*m_2)
