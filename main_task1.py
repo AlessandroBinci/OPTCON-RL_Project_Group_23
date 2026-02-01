@@ -24,6 +24,7 @@ else:
 
 ### --- IMPORTS --- ###
 import numpy as np
+import control as ctrl
 import matplotlib.pyplot as plt
 import dynamics as dyn
 import reference_curve as ref_traj
@@ -78,9 +79,13 @@ xx_ref, uu_ref = ref_traj.gen(tf, dt, ns, ni, th1_init, tau1_des, th1_final)
 xx = np.zeros((ns, TT))
 uu = np.zeros((ni, TT))
 
-for tt in range(TT):
-    xx[:, tt] = xx_ref[:, 0]  # Setting the starting point as the eq point 1
-    uu[:, tt] = uu_ref[:, 0]  
+for tt in range(TT):  
+    uu[:, tt] = uu_ref[:, 0]  # Setting the starting point as the eq point 1
+
+xx[:, 0] = xx_ref[:, 0]
+
+for tt in range(TT - 1):
+    xx[:, tt+1] = dyn.dynamics_euler(xx[:, tt], uu[:, tt])[0]
 
 # Defining the number of max iterations
 max_iters = 20
@@ -90,12 +95,24 @@ QQ = cst.QQ
 RR = cst.RR
 SS = np.zeros((ni, ns))
 
+# --- Computing terminal cost matrix Q_T--- 
+# A_t e B_t all istante final T --> A_T e B_T
+dfx_fin, dfu_fin = dyn.dynamics_euler(xx_ref[:, -1], uu_ref[:, -1])[1:]
+AA_fin = dfx_fin.T
+BB_fin = dfu_fin.T
+
+try:
+    # Risolve la Riccati stazionaria per avere un costo terminale ottimo
+    QQT = ctrl.dare(AA_fin, BB_fin, QQ, RR)[0]
+except:
+    print("Warning: DARE failed, using QQt as terminal cost")
+    QQT = QQ
+
 # Variables required for plots
 xx_history = []
 uu_history = []
 
-# List to store the Descent Directions (Delta x, Delta u) (required later for plots)
-dx_history = []
+# List to store the Descent Directions (Delta u) (required later for plots)
 du_history = []
 # List to store the costs (required later for plots)
 cost_history = [] 
@@ -122,44 +139,67 @@ for kk in range(max_iters):
         cost_current += cost_actual 
 
     # Computing the terminal cost and adding it to the total cost
-    termcost_actual = cst.termcost(xx[:,-1], xx_ref[:,-1],QQ) [0]   
-    qqT_kk = cst.termcost(xx[:,-1], xx_ref[:,-1],QQ) [1]
+    termcost_actual = cst.termcost(xx[:,-1], xx_ref[:,-1],QQT) [0]   
+    qqT_kk = cst.termcost(xx[:,-1], xx_ref[:,-1],QQT) [1]
     cost_current += termcost_actual
     cost_history.append(cost_current) # saving the cost at each iteration
 
     # Getting the gain matrix and the feedforward term from the ltv_LQR solver
-    KK, sigma = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQ, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [0:2]
+    KK, sigma = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQT, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [0:2]
     # Getting the descent directions from the ltv_LQR solver
-    dx_lin , du_lin = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQ, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [3:]
+    dx_lin , du_lin = ltv_LQR(AA_kk, BB_kk, QQ, RR, SS, QQT, TT, np.zeros((ns)), qq_kk, rr_kk, qqT_kk) [3:]
 
+    # Saving the computed descent direction
+    du_history.append(du_lin.copy())
+
+    # Stopping criteria for convergence
+    if np.sum(du_lin**2) < 1e-9:
+         print(f"Convergence reached at iteration {kk}. Stop.")
+         # Removing empty values of next iterations from history vectors
+         xx_history = xx_history[:kk+1]
+         uu_history = uu_history[:kk+1]
+         cost_history = cost_history[:kk+1]
+         break
+
+    # Computation of the gradient using the costate equation
+    lambda_vec = np.zeros((ns, TT))
+    grad_J_u = np.zeros((ni, TT))
+
+    lambda_vec[:, -1] = qqT_kk # λ_T = ∇lx_T
+
+    # Backward Pass
+    for tt in reversed(range(TT-1)):
+        l_x = qq_kk[:, tt]
+        l_u = rr_kk[:, tt]
+        
+        At = AA_kk[:, :, tt]
+        Bt = BB_kk[:, :, tt]
+
+        # Adjoint Equation
+        lambda_vec[:, tt] = l_x + At.T @ lambda_vec[:, tt+1]
+
+        # Gradient w.r.t. u
+        grad_J_u[:, tt] = l_u + Bt.T @ lambda_vec[:, tt+1]
     ###----- Armijo -----###
 
     # Setting the Armijo's parameters
     gamma = 1
     beta = 0.7
     cc = 0.5
-    max_armijo_iters = 10
+    max_armijo_iters = 20
     ii = 1
-    slope = 0
+    slope = 0.0
     
     # Computing the slope for the Armijo loop
-    for tt in range(TT):
+    for tt in range(TT-1):
 
-        # Dot Product of Gradient_x * Delta_x_lin
-        slope += np.dot(qq_kk[:, tt], dx_lin[:, tt])
-    
-        # If we are not in the last step, we add Gradient_u * Delta_u_lin (because in the last time instant T, uu isn't defined)
-        if tt < TT - 1:
-            slope += np.dot(rr_kk[:, tt], du_lin[:, tt])
-
-    # Adding slope term for the final time T (Gradient_x_T * Delta_x_T)
-    slope += np.dot(qqT_kk, dx_lin[:, -1])
-
+        # Dot Product of Gradient_u * Delta_u_lin
+        slope += np.dot(grad_J_u[:, tt], du_lin[:, tt])
 
     # ---------------------------------------------------------
     # Starting generating data for Armijo plots (Line Search)
     # ---------------------------------------------------------
-    iters_to_debug = [0, 1, 2, 5] # iteration samples of which we'll plot armijo
+    iters_to_debug = [0, 1, 5] # iteration samples of which we'll plot armijo
     armijo_data_iter = {}  # dictionary to store iterations' data
 
     # Computing Line Search curve (Feedback) only for iteration {kk} equal to 0,1,5
@@ -167,7 +207,7 @@ for kk in range(max_iters):
 
         print(f"Computing Line Search curve (Feedback) only for iteration {kk}")
         
-        # Defining X-axis (20 points between 0 and 1.0)
+        # Defining X-axis (100 points between 0 and 1.0)
         gammas_test = np.linspace(0, 1.0, 100) 
         # Initializing lists to store later the real cost and the armijo threshold line
         costs_test = []
@@ -205,7 +245,7 @@ for kk in range(max_iters):
                 xx_roll_traj[:, t+1] = x_roll # Salviamo per il passo dopo
             
             # Final cost
-            c_cum += cst.termcost(x_roll, xx_ref[:, -1], QQ)[0]
+            c_cum += cst.termcost(x_roll, xx_ref[:, -1], QQT)[0]
             
             costs_test.append(c_cum) # Saving the cost
             
@@ -263,7 +303,7 @@ for kk in range(max_iters):
             cost_temp += step_c
         
         # We compute final cost on the reached final state
-        term_c = cst.termcost(xx_temp[:, -1], xx_ref[:, -1], QQ)[0]
+        term_c = cst.termcost(xx_temp[:, -1], xx_ref[:, -1], QQT)[0]
         cost_temp += term_c
 
         # Saving the stepsize attempt (Orange point) ---
@@ -291,12 +331,6 @@ for kk in range(max_iters):
             uu = uu_temp.copy()
 
             break
-
-    
-
-    # Saving the computed descent direction
-    dx_history.append(dx_lin.copy())
-    du_history.append(du_lin.copy())
 
 xx_history.append(xx.copy())
 uu_history.append(uu.copy())
@@ -607,45 +641,36 @@ if len(global_armijo_data) > 0:
 # --- PLOT 4: Norm of the Descent Direction (Semi-Log Scale) ---
 # Visualization of the Norm of the descent direction along iterations (semi-logarithmic scale)
 
-if len(dx_history) > 0 and len(du_history) > 0:
-    
+if len(du_history) > 0:
     descent_norms = []
     iterations = []
     
     # Computation of the norm for each stored iteration
-    for i in range(len(dx_history)):
-        dx_traj = dx_history[i] # Matrix (ns x TT)
-        du_traj = du_history[i] # Matrix (ni x TT)
+    for i in range(len(du_history)):
+        du_traj = du_history[i] 
         
-        # Combine in one single vector to compute the "norm of the total perturbation"
-        # Use the norm L2 (Euclidian) of all flattened values 
-        # Norm = sqrt( sum(dx^2) + sum(du^2) )
-        vector_dx = dx_traj.flatten()
-        vector_du = du_traj.flatten()
-        
-        total_norm = np.linalg.norm(np.concatenate((vector_dx, vector_du)))
-        
-        descent_norms.append(total_norm)
+        norm_sq = np.sum(du_traj**2)
+        descent_norms.append(norm_sq)
         iterations.append(i)
 
     # Creation of the plot
     plt.figure(figsize=(10, 6))
     
     # Semi-logaritmic plot (logaritmic Y axis)
-    plt.semilogy(iterations, descent_norms, 'bo-', linewidth=2, markersize=6, label=r'$||\Delta z||$ (Descent Direction)')
+    plt.semilogy(iterations, descent_norms, 'bo-', linewidth=2, markersize=6, label=r'$||\Delta u||^2$')
     
-    plt.title('Norm of Descent Direction along Iterations')
-    plt.xlabel('Iteration $k$')
-    plt.ylabel(r'Norm $||\Delta z^k||$')
-    plt.grid(True, which="both", axis="both", ls="--", alpha=0.6) # Specific grid for log plot
+    plt.title('Descent Direction Norm (Squared)', fontsize=16)
+    plt.xlabel('Iteration $k$', fontsize=14)
+    plt.ylabel(r'$||\Delta u||^2$', fontsize=14)
+    plt.grid(True, which="both", axis="both", ls="--", alpha=0.6)
     plt.legend(loc='best')
-    
+    plt.tight_layout()
+
     plt.savefig(os.path.join(output_folder,'Task1_Descent_Direction_Norm.png'), dpi=300)
     plt.show()
 
 else:
-    print("No stored history of the directions (dx_history empty).")
-
+    print("No stored history of the directions (du_history empty).")
 
 # --- PLOT 5: Cost along iterations (semi-logarithmic scale) ---
 # Visualization of the Cost along iterations (semi-logarithmic scale)

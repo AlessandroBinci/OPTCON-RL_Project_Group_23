@@ -10,7 +10,7 @@ import equilibrium as eq
 dt = dyn.dt
 
 # Defining final time in seconds
-#tf = 10
+#f = 10
 #tf = 20
 tf = 30.5
 # Time of transition start
